@@ -18,7 +18,7 @@ Note the animation here is rather blocky, but the actual operation is buttery Ro
  
 <img width="400" src="assets/rgbclock.gif" align="center" />
 
-The news feed is not fully functional as yet, skeleton code is in place but needs vertical scrolling to be implemented before its fully functional.
+The news feed is not fully functional as yet, skeleton code is in place but needs vertical scrolling to be implemented before its activated.
 
 And further home monitoring is to be added later, motion camera and ties to several Nest thermostats
 
