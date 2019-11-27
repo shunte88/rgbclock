@@ -18,6 +18,8 @@ Note the animation here is rather blocky, but the actual operation is buttery Ro
  
 <img width="400" src="assets/rgbclock.gif" align="center" />
 
+Weather data are obtained via the weathercache mechanism that is located in the scrollclock repo.  The weather icons come from the [Erik Flowers] SVG collection with some  programmatic modifications applied as they are rendered.
+
 The news feed is not fully functional as yet, skeleton code is in place but needs vertical scrolling to be implemented before its activated.
 
 And further home monitoring is to be added later, motion camera and ties to several Nest thermostats
@@ -36,4 +38,4 @@ MIT, see [LICENSE](LICENSE)
 [Adafruit HAT]: https://www.adafruit.com/products/2345
 [Go binding]: https://github.com/mcuadros/go-rpi-rgb-led-matrix
 [hzeller RGB Library]: https://github.com/hzeller/rpi-rgb-led-matrix
-
+[Erik Flowers]: https://github.com/erikflowers/weather-icons
