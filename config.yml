@@ -1,0 +1,60 @@
+LMS:
+  IP: "192.168.1.25"
+  port: 9000
+  player: "b8:27:eb:70:71:5c"
+RGB:
+  scroll_limit: 28
+  mapper: "U-maper;Rotate:180"
+  fontfile: "font/LCDM2U__.TTF"
+  fontfile2: "font/Roboto-Black.ttf"
+  folding: true
+  rows: 64
+  cols: 64
+  parallel: 1
+  chain: 4
+  width: 128
+  height: 128
+  hardware: adafruit-hat-pwm
+  layout: full
+  daybright: 20
+  #nightbright: 10
+  nightbright: 3
+  showbright: 1
+simple:
+  style: 'style="fill: %s" fill-opacity="1.0" stroke-opacity="0.4" stroke="black" stroke-width="1"'
+  detail: true
+  clock:
+    width: 64
+    height: 64
+  icon:
+    main:
+      alpha: 0.60
+      width: 27
+      scale: 0.90
+    wind:
+      alpha: 0.95
+      width: 24
+      scale: 0.65
+full:
+  style: 'style="fill: %s" fill-opacity="1.0" stroke-opacity="0.4" stroke="midnightblue" stroke-width="2"'
+  detail: false
+  clock:
+    width: 128
+    height: 128
+  icon:
+    main:
+      alpha: 0.60
+      width: 54
+      scale: 1.80
+    wind:
+      alpha: 0.95
+      width: 48
+      scale: 1.3
+RSS: 0
+feeds:
+  -
+    title: "BBC News UK"
+    link: "http://newsrss.bbc.co.uk/rss/newsonline_uk_edition/front_page/rss.xml"
+  -
+    title: "BBC News International"
+    link: "http://feeds.bbci.co.uk/news/world/rss.xml"

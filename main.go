@@ -1,0 +1,537 @@
+package main
+
+import (
+	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
+	"io/ioutil"
+	"math"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/disintegration/imaging"
+	"github.com/fogleman/gg"
+	"github.com/golang/freetype/truetype"
+	rgbmatrix "github.com/mcuadros/go-rpi-rgb-led-matrix"
+	"github.com/spf13/viper"
+
+	//rgbmatrix "github.com/shunte88/go-rpi-rgb-led-matrix"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/gofont/gomonobold"
+)
+
+var idx = []int{0, 1, 2, 3}
+
+func init() {
+
+	weatherserveruri = os.Getenv(weatherServerURI)
+	if "" == weatherserveruri {
+		weatherserveruri = "http://192.168.1.249:5000/weather/current"
+	}
+
+	viper.SetConfigName("config")
+	viper.AddConfigPath("$HOME/rgbclock")
+	viper.AddConfigPath(".")
+	err := viper.ReadInConfig()
+	checkFatal(err)
+
+	fontfile = viper.GetString("RGB.fontfile")
+	fontfile2 = viper.GetString("RGB.fontfile2")
+	W = viper.GetInt("RGB.width")
+	H = viper.GetInt("RGB.height")
+	rows = viper.GetInt("RGB.rows")
+	cols = viper.GetInt("RGB.cols")
+	folding = viper.GetBool("RGB.folding")
+
+	parallel = viper.GetInt("RGB.parallel")
+	chain = viper.GetInt("RGB.chain")
+
+	daybright = viper.GetInt("RGB.daybright")
+	if daybright < 0 || daybright > 100 {
+		daybright = 20
+	}
+	nightbright = viper.GetInt("RGB.nightbright")
+	if nightbright < 0 || nightbright > 100 {
+		nightbright = daybright
+	}
+
+	layout = viper.GetString("RGB.layout")
+	scroll = viper.GetInt("RGB.scroll_limit")
+	hardware = viper.GetString("RGB.hardware")
+	showbright = viper.GetBool("RGB.showbright")
+
+	detail = viper.GetBool(layout + ".detail")
+	clockw = viper.GetInt(layout + ".clock.width")
+	clockh = viper.GetInt(layout + ".clock.height")
+
+	miAlpha = viper.GetFloat64(layout + ".icon.main.alpha")
+	miW = viper.GetInt(layout + ".icon.main.width")
+	miScale = viper.GetFloat64(layout + ".icon.main.scale")
+
+	wiAlpha = viper.GetFloat64(layout + ".icon.wind.alpha")
+	wiW = viper.GetInt(layout + ".icon.wind.width")
+	wiScale = viper.GetFloat64(layout + ".icon.wind.scale")
+
+	iconStyle = viper.GetString(layout + ".style")
+
+	feeds = viper.Get("feeds").([]interface{})
+
+	// init icon map (dynamic scaling)
+	mapInit()
+
+	lmsIP := viper.GetString("LMS.IP")
+	lmsPort := viper.GetInt("LMS.port")
+	lmsPlayer := viper.GetString("LMS.player")
+	lms = NewLMSServer(lmsIP, lmsPort, lmsPlayer)
+
+}
+
+func main() {
+	/*
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Println(err)
+			}
+		}()
+	*/
+
+	weather()
+
+	mode = true
+
+	config := &rgbmatrix.DefaultConfig
+	config.Rows = rows
+	config.Cols = cols
+	config.Parallel = parallel
+	config.ChainLength = chain
+	config.Brightness = brightness
+	config.HardwareMapping = hardware
+	config.ShowRefreshRate = false
+	config.InverseColors = false
+	config.DisableHardwarePulsing = false
+
+	// fixed assets
+	imPrecip, _ = cacheImage(`brolly`, imPrecip, 0.00)
+	imHumid, _ = cacheImage(`humidity`, imHumid, 0.00)
+	//imSnow, _ = cacheImage(`snowflake`, imSnow, 0.00)
+	togweather := false
+
+	// concurrent updates
+	stop := sched(weather, 30*time.Second)
+	toggle := sched(toggleMode, 15*time.Second)
+	rotator := sched(rotator, 3*time.Second)
+	rssfeed := sched(news, 60*time.Minute)
+
+	wf := float64(clockw)
+	hf := float64(clockh)
+	r := wf * 0.48
+	var cx float64 = wf / 2.00
+	var cy float64 = hf / 2.00
+	length := wf * 0.07
+	lw := wf * 0.04
+
+	ea := 0.000
+
+	font, err := truetype.Parse(gomonobold.TTF)
+	checkFatal(err)
+	lcdfont := font
+	fb, err := ioutil.ReadFile(fontfile)
+	if nil == err {
+		lcdfont, _ = truetype.Parse(fb)
+	}
+	if `` != fontfile2 {
+		fb, err = ioutil.ReadFile(fontfile2)
+		if nil == err {
+			font, _ = truetype.Parse(fb)
+		}
+	}
+
+	face := truetype.NewFace(lcdfont, &truetype.Options{
+		Size: wf * 0.23,
+	})
+	zface := truetype.NewFace(lcdfont, &truetype.Options{
+		Size: wf * 0.24,
+	})
+	sface := truetype.NewFace(font, &truetype.Options{
+		Size: wf * 0.145,
+	})
+	dpface := truetype.NewFace(font, &truetype.Options{
+		Size: hf * 0.11,
+	})
+	dptface := truetype.NewFace(font, &truetype.Options{
+		Size: hf * 0.055,
+	})
+	dtface := truetype.NewFace(font, &truetype.Options{
+		Size: hf * 0.08,
+	})
+	lmsface := truetype.NewFace(font, &truetype.Options{
+		Size: hf * 0.066,
+	})
+
+	m, err := rgbmatrix.NewRGBLedMatrix(config)
+	checkFatal(err)
+
+	rgbc := rgbmatrix.NewCanvas(m)
+	defer rgbc.Close()
+	bounds := rgbc.Bounds()
+
+	dc := gg.NewContext(W, H)
+
+	var temps []string
+
+	// eye-candy
+	grad := gg.NewRadialGradient(cx, cy, r+2, 0, 0, r+2)
+	grad.AddColorStop(0, color.RGBA{69, 162, 71, 64})
+	grad.AddColorStop(1, color.RGBA{51, 51, 102, 64})
+
+	/*
+	   Blue Sky #56ccf2 - #2f80ed
+	   Blue Lagoon #43c6ac - #191654
+	   Dawn #f3904f - #3b4371
+	   Dusk #2c3e50 - #fd746c
+	   Pacific Dream #34e89e - #0f3443
+	   Partly Cloudy Gradient ( #DAE2F8 - #D6A4A4 )
+	   Sunny Gradient ( #FF4E50 - #F9D423 )
+	   Cloudy Gradient ( #ECE9E6 - #FFFFFF )
+	   Snowing Gradient ( #E6DADA - #274046 )
+	   Rain Gradient ( #616161 - #9BC5C3 )
+	   Fog Gradient ( #757F9A - #D7DDE8 )
+	*/
+
+	// using a 2nd copy of the font for InfoLabel as the mutex seems to cause problems
+	xlmsface := truetype.NewFace(font, &truetype.Options{
+		Size: hf * 0.066,
+		DPI:  72,
+	})
+	lms.Player.Albumartist.SetMaxlen(scroll)
+	lms.Player.Albumartist.SetFace(xlmsface, "#ff9900c0")
+	lms.Player.Album.SetMaxlen(scroll)
+	lms.Player.Album.SetFace(xlmsface, "#ff9900c0")
+	lms.Player.Title.SetMaxlen(scroll)
+	lms.Player.Title.SetFace(xlmsface, "#ff9900c0")
+	lms.Player.Artist.SetMaxlen(scroll)
+	lms.Player.Artist.SetFace(xlmsface, "#ff9900c0")
+
+	lastBrightness := brightness
+	var icache draw.Image
+
+	lms.Start()
+	defer lms.Stop()
+
+	//pic := 0 //debug
+
+	for {
+
+		if lastBrightness != brightness {
+			err = rgbc.SetBrightness(uint32(brightness))
+			lastBrightness = brightness
+			if nil != err {
+				fmt.Println("brightness", err)
+			}
+		}
+
+		if nil != icache {
+			dc.DrawImageAnchored(icache, 0, 0, 0, 0)
+		} else {
+
+			dc.SetHexColor("#000000")
+			dc.Clear()
+
+			dc.SetFillStyle(grad)
+			dc.DrawCircle(cx, cy, r+1)
+			dc.Fill()
+
+			dc.SetHexColor("#ff0000")
+			dc.SetLineWidth(lw)
+			for i := 0; i < 60; i += 5 {
+
+				var th float64 = math.Pi/30.00*float64(i) - math.Pi/3.00
+				x, y := math.Cos(th), math.Sin(th)
+
+				x1, y1 := (float64(r)-float64(length))*x+cx, (float64(r)-float64(length))*y+cy
+				x2, y2 := float64(r)*x+cx, float64(r)*y+cy
+
+				dc.DrawLine(x1, y1, x2, y2)
+				dc.Stroke()
+
+			}
+			// cache the clock face - zero struggles
+			icache = imaging.New(clockw, clockh, color.NRGBA{0, 0, 0, 0})
+			icache = imaging.Paste(icache, dc.Image(), image.Pt(0, 0))
+
+		}
+
+		t := time.Now()
+		s := float64(t.Second())
+
+		h, err := strconv.ParseFloat(t.Format("5.000"), 64)
+		if nil == err {
+			ea = 6 * h
+		} else {
+			ea = 6 * s
+		}
+
+		// glitchy under one second ??
+		if ea < 8 {
+			dc.SetHexColor("#660000")
+			dc.DrawCircle(float64(cx), float64(cy), float64(r))
+			dc.Stroke()
+		}
+
+		dc.SetHexColor("#ff0000")
+		dc.DrawArc(float64(cx), float64(cy), float64(r), degToRadians(0), degToRadians(ea))
+		dc.Stroke()
+
+		/*
+				ts := t.Format("15:04")
+				if 0 == int(s)%2 {
+					ts = strings.Replace(ts, ":", " ", -1)
+				}
+			dc.SetHexColor("#660000")
+			dc.SetFontFace(zface)
+			dc.DrawStringAnchored(ts, wf/2, hf*0.47, 0.5, 0.5)
+			dc.DrawStringAnchored(colon, wf/2, hf/2, 0.5, 0.5)
+
+			dc.SetHexColor("#ff0000")
+			dc.SetFontFace(face)
+			dc.DrawStringAnchored(ts, wf/2, hf*0.47, 0.5, 0.5)
+			dc.DrawStringAnchored(colon, wf/2, hf/2, 0.5, 0.5)
+		*/
+
+		// tighter time format, specically with non-monospaced fonts
+		ts := t.Format("15 04")
+		colon := `:`
+		if 0 == int(s)%2 {
+			colon = ` `
+		}
+
+		placeTime(dc, wf, hf, zface, ts, colon, "#660000")
+		placeTime(dc, wf, hf, face, ts, colon, "#ff0000")
+
+		// place weather icon
+		if imIcon.image != nil {
+			dc.DrawImageAnchored(imIcon.image, int(wf/2), int(0.71875*hf), 0.5, 0.5)
+		}
+
+		if !mode {
+			temps = strings.Split(w.Current.Temperature, " ")
+		} else {
+			p := w.Current.Daypart0.Precipitation
+			if 0 == int(s)%2 {
+				if togweather && `0%` != p {
+					temps[1] = p
+					// precipitation
+					if imPrecip.image != nil {
+						wdx := float64(cx + (wf * 0.09))
+						wdy := float64(0.28 * hf)
+						if `100%` == p {
+							wdx += 5.00
+						}
+						dc.DrawImageAnchored(imPrecip.image, int(wdx), int(wdy), 0.5, 0.5)
+					}
+				} else {
+					temps[1] = w.Current.Humidity
+					// humidity
+					if imHumid.image != nil {
+						wdx := float64(cx + (wf * 0.09))
+						wdy := float64(0.28 * hf)
+						dc.DrawImageAnchored(imHumid.image, int(wdx), int(wdy), 0.5, 0.5)
+					}
+				}
+			} else {
+				togweather = !togweather
+				temps = strings.Split(w.Current.Wind, " ")
+				// place wind icon
+				if imWindDir.image != nil {
+					wdx := float64(cx + (wf * 0.09375))
+					wdy := float64(0.312 * hf)
+					dc.DrawImageAnchored(imWindDir.image, int(wdx), int(wdy), 0.5, 0.5)
+				}
+			}
+		}
+		dc.SetFontFace(sface)
+		if !mode {
+			dc.SetHexColor("#0099ff")
+			dc.DrawStringAnchored(temps[0], wf/2, hf*0.2, 0.5, 0.5)
+		}
+		dc.SetHexColor("#66ff99")
+		if !mode {
+			dc.DrawStringAnchored(temps[1], wf/2, hf*0.32, 0.5, 0.5)
+		} else {
+			dc.DrawStringAnchored(temps[1], wf/3, hf*0.27, 0.5, 0.5)
+		}
+
+		if detail && W > 64 {
+			placeWeatherDetail(dc, hf, dpface)
+		}
+
+		if "full" == layout {
+			dc.SetHexColor("#ff9900")
+			dc.SetFontFace(dtface)
+			temps = hackaDate(t)
+			dpos := 2 + (5 * (hf / 8))
+			dc.DrawStringAnchored(temps[idx[0]], wf/4, dpos, 0.5, 0.5)
+			dc.DrawStringAnchored(temps[idx[1]], 3*(wf/4), dpos, 0.5, 0.5)
+			if showbright {
+				dc.DrawStringAnchored(evut, cx, hf-length, 0.5, 0.5)
+			}
+		}
+
+		if `play` == lms.Player.Mode {
+			dst := imaging.Resize(dc.Image(), 65, 65, imaging.CatmullRom) //Lanczos)
+			dc.DrawImage(dst, 0, 0)
+			dc.SetHexColor("#000000")
+			dc.DrawRectangle(65, 0, 65, 65)
+			dc.Fill()
+			dc.DrawRectangle(0, 65, 127, 63)
+			dc.Fill()
+			if mode {
+				placeWeatherDetail(dc, hf/2, dptface)
+			} else {
+				dst = imaging.Resize(lms.Coverart(), 64, 64, imaging.Lanczos)
+				dc.DrawImage(dst, 65, 0)
+			}
+
+			dst = imaging.Resize(lms.Coverart(), 126, 44, imaging.Lanczos)
+			dst = imaging.Blur(imaging.AdjustBrightness(dst, -40), 6.5)
+			dc.DrawImage(dst, 1, 66)
+
+			dc.SetHexColor("#ff9900")
+			dc.SetFontFace(lmsface)
+			/*
+				// text version
+				dc.DrawStringAnchored(lms.Player.Albumartist.Display(), float64(W/2), float64(cy+8), 0.5, 0.5)
+				dc.DrawStringAnchored(lms.Player.Album.Display(), float64(W/2), float64(cy+18), 0.5, 0.5)
+				dc.DrawStringAnchored(lms.Player.Title.Display(), float64(W/2), float64(cy+28), 0.5, 0.5)
+				dc.DrawStringAnchored(lms.Player.Artist.Display(), float64(W/2), float64(cy+38), 0.5, 0.5)
+			*/
+
+			// graphical version - smoother scrolling
+			dc.DrawImageAnchored(lms.Player.Albumartist.Image(), int(W/2), int(cy+11), 0.5, 0.5)
+			dc.DrawImageAnchored(lms.Player.Album.Image(), int(W/2), int(cy+21), 0.5, 0.5)
+			dc.DrawImageAnchored(lms.Player.Title.Image(), int(W/2), int(cy+31), 0.5, 0.5)
+			dc.DrawImageAnchored(lms.Player.Artist.Image(), int(W/2), int(cy+41), 0.5, 0.5)
+
+			dc.SetFontFace(lmsface)
+			dc.SetHexColor("#000000")
+			dc.SetLineWidth(lw - 2)
+			dc.DrawRectangle(0, 67, 127, 63)
+			dc.Stroke()
+			dc.SetLineWidth(0.5)
+			dc.SetHexColor("#ff9900")
+			dc.DrawRectangle(0, 67, 127, 45)
+			dc.Stroke()
+			drawHorizontalBar(dc, 10, 110, lms.Player.Percent)
+			dc.SetHexColor("#ff9900")
+			dc.DrawStringAnchored(lms.Player.TimeStr, 16, float64(H-9), 0.5, 0.5)
+			dc.DrawStringAnchored(lms.Player.DurStr, float64(W-16), float64(H-9), 0.5, 0.5)
+			dc.DrawStringAnchored(lms.Player.Mode, float64(W/2), float64(H-9), 0.5, 0.5)
+			dc.SetLineWidth(lw)
+		}
+
+		//gg.SavePNG(fmt.Sprintf("rgbclock%010d.png", pic), imaging.Resize(dc.Image(), W*4, H*4, imaging.Lanczos))
+		//pic++
+
+		if folding {
+			itmp := imaging.Rotate180(dc.Image())
+			dst := imaging.New(4*64, 64, color.NRGBA{0, 0, 0, 0})
+			dst = imaging.Paste(dst, dc.Image(), image.Pt(0, 0))
+			dst = imaging.Paste(dst, itmp, image.Pt(128, 0))
+			draw.Draw(rgbc, dst.Bounds(), dst, image.ZP, draw.Over)
+		} else {
+			draw.Draw(rgbc, bounds, dc.Image(), image.ZP, draw.Over)
+		}
+
+		rgbc.Render()
+		time.Sleep(60 * time.Millisecond)
+
+	}
+
+	stop <- true
+	toggle <- true
+	rotator <- true
+	rssfeed <- true
+
+}
+
+func placeTime(dc *gg.Context, wf, hf float64, face font.Face, ts, colon, color string) {
+	dc.SetHexColor(color)
+	dc.SetFontFace(face)
+	dc.DrawStringAnchored(ts, wf/2, hf*0.47, 0.5, 0.5)
+	dc.DrawStringAnchored(colon, wf/2, hf*0.43, 0.5, 0.5)
+}
+
+func placeWeatherDetail(dc *gg.Context, hf float64, dpface font.Face) {
+	dc.SetFontFace(dpface)
+	placeDetail(dc, w.Current.Daypart1, imIconDP1.image, hf)
+	placeDetail(dc, w.Current.Daypart2, imIconDP2.image, hf)
+	placeDetail(dc, w.Current.Daypart3, imIconDP3.image, hf)
+	placeDetail(dc, w.Current.Daypart4, imIconDP4.image, hf)
+}
+
+func placeDetail(dc *gg.Context, d Daypart, wi draw.Image, hf float64) {
+	f, err := strconv.ParseFloat(d.ID, 64)
+	if err != nil {
+		return
+	}
+	dx := (f - 1.00) * 15
+	pdy1 := (hf * 0.11) + dx + 1
+	pdy2 := (hf * 0.24) + dx
+
+	if "1" != d.ID {
+		dc.SetLineWidth(0.15)
+		dc.SetHexColor("#86acac")
+		dc.DrawLine(67, pdy1-7, 127, pdy1-7)
+		dc.Stroke()
+	}
+
+	dc.SetHexColor("#2c3e50")
+	dc.DrawString(d.Label, 68, pdy1)
+	dc.SetHexColor("#0f3443")
+	dc.DrawString(fmt.Sprintf("% 4s %sF", d.Hilo, d.Temperature), 68, pdy2)
+	if f > 1 {
+		f += 1.00
+	}
+	if wi != nil {
+		dc.DrawImageAnchored(wi, W-23, int(pdy1-12+(f-1)), 0, 0)
+	}
+}
+
+func degToRadians(deg float64) float64 {
+	return gg.Radians(-90.00 + deg)
+}
+
+func hackaDate(t time.Time) []string {
+	suffix := "th"
+	switch t.Day() {
+	case 1, 21, 31:
+		suffix = "st"
+	case 2, 22:
+		suffix = "nd"
+	case 3, 23:
+		suffix = "rd"
+	}
+	return strings.Split(t.Format("Mon Jan 2"+suffix+" 2006"), " ")
+}
+
+func rotator() {
+	idx = append(idx[1:], idx[0:1]...)
+}
+
+func drawHorizontalBar(dc *gg.Context, x, y float64, pcnt float64) {
+	dc.SetLineWidth(1)
+	l := float64(W) - (2 * x)
+	lp := (l - 2.00) * (pcnt / 100.00)
+	dc.SetHexColor("#000000")
+	dc.DrawRectangle(x+1, y+1, l-2, 2)
+	dc.Fill()
+	dc.SetHexColor("#ffff00")
+	dc.DrawRectangle(x+1, y+1, lp, 2)
+	dc.Fill()
+	dc.SetHexColor("#ff9900") // ("#ffffff")
+	dc.DrawRectangle(x, y, l, 4)
+	dc.Stroke()
+}
