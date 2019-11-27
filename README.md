@@ -32,7 +32,7 @@ MIT, see [LICENSE](LICENSE)
 
 
 [ada]: https://www.adafruit.com/product/3649
-[adafruit-hat]: https://www.adafruit.com/products/2345
+[Adafruit Bonnet]: https://www.adafruit.com/product/3211
 [Adafruit HAT]: https://www.adafruit.com/products/2345
 [Go binding]: https://github.com/mcuadros/go-rpi-rgb-led-matrix
 [hzeller RGB Library]: https://github.com/hzeller/rpi-rgb-led-matrix
