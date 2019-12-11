@@ -22,6 +22,8 @@ Weather data are obtained via the weathercache mechanism that is located in the 
 
 The news feed is not fully functional as yet, skeleton code is in place but needs vertical scrolling to be implemented before its activated.
 
+MBTA arrival predictions are now available.  Specify the required routes, stops and when the MBTA details should be displayed via configuration.
+
 And further home monitoring is to be added later, motion camera and ties to several Nest thermostats
 
 Hopefully some or all of the code will find a use in your own projects
