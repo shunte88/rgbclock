@@ -65,61 +65,66 @@ func mapInit() {
 			popcolor: "yellow"}, // sunny
 		"icon-33": icon{filename: "wi-night-clear", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true,
 			popcolor: "steelblue"}, // fair (night)
-		"icon-34":   icon{filename: "wi-day-sunny", color: "yellow", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},         // fair (day)
-		"icon-35":   icon{filename: "wi-hail", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},               // mixed rain and hail
-		"icon-36":   icon{filename: "wi-hot", color: "yellow", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},               // hot
-		"icon-37":   icon{filename: "wi-thunderstorm", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},       // isolated thunderstorms
-		"icon-38":   icon{filename: "wi-storm-showers", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},      // scattered thunderstorms
-		"icon-39":   icon{filename: "wi-rain", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},               // scattered rain
-		"icon-40":   icon{filename: "wi-rain", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},               // heavy rain
-		"icon-41":   icon{filename: "wi-snowflake-cold", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},     // heavy snow
-		"icon-42":   icon{filename: "wi-snow", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},               // scattered snow showers
-		"icon-43":   icon{filename: "wi-snow-wind", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},          // blowing heavy snow
-		"icon-44":   icon{filename: "wi-day-cloudy", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},         // partly cloudy (day)
-		"icon-45":   icon{filename: "wi-night-thunderstorm", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true}, // thundershowers (night)
-		"icon-46":   icon{filename: "wi-night-snow", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},         // snow showers (night)
-		"icon-47":   icon{filename: "wi-night-thunderstorm", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true}, // isolated thundershowers (night)
-		"wind-0":    icon{filename: "wi-wind-beaufort-0", color: "yellowgreen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
-		"wind-1":    icon{filename: "wi-wind-beaufort-1", color: "yellowgreen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
-		"wind-2":    icon{filename: "wi-wind-beaufort-2", color: "yellowgreen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
-		"wind-3":    icon{filename: "wi-wind-beaufort-3", color: "yellowgreen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
-		"wind-4":    icon{filename: "wi-wind-beaufort-4", color: "yellowgreen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
-		"wind-5":    icon{filename: "wi-wind-beaufort-5", color: "darkorange", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
-		"wind-6":    icon{filename: "wi-wind-beaufort-6", color: "darkorange", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
-		"wind-7":    icon{filename: "wi-wind-beaufort-7", color: "darkorange", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
-		"wind-8":    icon{filename: "wi-wind-beaufort-8", color: "darkorange", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
-		"wind-9":    icon{filename: "wi-wind-beaufort-9", color: "crimson", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
-		"wind-10":   icon{filename: "wi-wind-beaufort-10", color: "crimson", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
-		"wind-11":   icon{filename: "wi-wind-beaufort-11", color: "crimson", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
-		"wind-12":   icon{filename: "wi-wind-beaufort-12", color: "crimson", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
-		"wind-N":    icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 180.0, scale: wiScale, alpha: wiAlpha, shadow: true}, // N
-		"wind-NNE":  icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 202.5, scale: wiScale, alpha: wiAlpha, shadow: true}, // NNE
-		"wind-NE":   icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 225.0, scale: wiScale, alpha: wiAlpha, shadow: true}, // NE
-		"wind-ENE":  icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 247.5, scale: wiScale, alpha: wiAlpha, shadow: true}, // ENE
-		"wind-E":    icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 270.0, scale: wiScale, alpha: wiAlpha, shadow: true}, // E
-		"wind-ESE":  icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 292.5, scale: wiScale, alpha: wiAlpha, shadow: true}, // ESE
-		"wind-SE":   icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 315.0, scale: wiScale, alpha: wiAlpha, shadow: true}, // SE
-		"wind-SSE":  icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 337.5, scale: wiScale, alpha: wiAlpha, shadow: true}, // SSE
-		"wind-S":    icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 0.0, scale: wiScale, alpha: wiAlpha, shadow: true},   // S
-		"wind-SSW":  icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 22.5, scale: wiScale, alpha: wiAlpha, shadow: true},  // SSW
-		"wind-SW":   icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 45.0, scale: wiScale, alpha: wiAlpha, shadow: true},  // SW
-		"wind-WSW":  icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 67.5, scale: wiScale, alpha: wiAlpha, shadow: true},  // WSW
-		"wind-W":    icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 90.0, scale: wiScale, alpha: wiAlpha, shadow: true},  // W
-		"wind-WNW":  icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 112.5, scale: wiScale, alpha: wiAlpha, shadow: true}, // WNW
-		"wind-NW":   icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 135.0, scale: wiScale, alpha: wiAlpha, shadow: true}, // NW
-		"wind-NNW":  icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 157.5, scale: wiScale, alpha: wiAlpha, shadow: true}, // NNW
-		"moon-0":    icon{filename: "wi-moon-alt-new", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
-		"moon-1":    icon{filename: "wi-moon-alt-waxing-crescent-5", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
-		"moon-2":    icon{filename: "wi-moon-alt-first-quarter", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
-		"moon-3":    icon{filename: "wi-moon-alt-waxing-gibbous-5", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
-		"moon-4":    icon{filename: "wi-moon-alt-full", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
-		"moon-5":    icon{filename: "wi-moon-alt-waning-gibbous-5", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
-		"moon-6":    icon{filename: "wi-moon-alt-third-quarter", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
-		"moon-7":    icon{filename: "wi-moon-alt-waning-crescent-5", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
-		"moon-8":    icon{filename: "wi-moon-alt-new", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
-		"brolly":    icon{filename: "wi-umbrella", color: "#66ff99", width: wiW, height: wiW, scale: (wiScale * 1.2), alpha: 1, shadow: true},
-		"humidity":  icon{filename: "wi-humidity", color: "#66ff99", width: wiW, height: wiW, scale: (wiScale * 1.2), alpha: 1, shadow: true},
-		"snowflake": icon{filename: "wi-snowflake-cold", color: "#66ff99", width: wiW, height: wiW, scale: (wiScale * 1.2), alpha: 1, shadow: true},
+		"icon-34":       icon{filename: "wi-day-sunny", color: "yellow", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},         // fair (day)
+		"icon-35":       icon{filename: "wi-hail", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},               // mixed rain and hail
+		"icon-36":       icon{filename: "wi-hot", color: "yellow", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},               // hot
+		"icon-37":       icon{filename: "wi-thunderstorm", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},       // isolated thunderstorms
+		"icon-38":       icon{filename: "wi-storm-showers", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},      // scattered thunderstorms
+		"icon-39":       icon{filename: "wi-rain", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},               // scattered rain
+		"icon-40":       icon{filename: "wi-rain", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},               // heavy rain
+		"icon-41":       icon{filename: "wi-snowflake-cold", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},     // heavy snow
+		"icon-42":       icon{filename: "wi-snow", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},               // scattered snow showers
+		"icon-43":       icon{filename: "wi-snow-wind", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},          // blowing heavy snow
+		"icon-44":       icon{filename: "wi-day-cloudy", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},         // partly cloudy (day)
+		"icon-45":       icon{filename: "wi-night-thunderstorm", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true}, // thundershowers (night)
+		"icon-46":       icon{filename: "wi-night-snow", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},         // snow showers (night)
+		"icon-47":       icon{filename: "wi-night-thunderstorm", color: "linen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true}, // isolated thundershowers (night)
+		"wind-0":        icon{filename: "wi-wind-beaufort-0", color: "yellowgreen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
+		"wind-1":        icon{filename: "wi-wind-beaufort-1", color: "yellowgreen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
+		"wind-2":        icon{filename: "wi-wind-beaufort-2", color: "yellowgreen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
+		"wind-3":        icon{filename: "wi-wind-beaufort-3", color: "yellowgreen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
+		"wind-4":        icon{filename: "wi-wind-beaufort-4", color: "yellowgreen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
+		"wind-5":        icon{filename: "wi-wind-beaufort-5", color: "darkorange", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
+		"wind-6":        icon{filename: "wi-wind-beaufort-6", color: "darkorange", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
+		"wind-7":        icon{filename: "wi-wind-beaufort-7", color: "darkorange", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
+		"wind-8":        icon{filename: "wi-wind-beaufort-8", color: "darkorange", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
+		"wind-9":        icon{filename: "wi-wind-beaufort-9", color: "crimson", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
+		"wind-10":       icon{filename: "wi-wind-beaufort-10", color: "crimson", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
+		"wind-11":       icon{filename: "wi-wind-beaufort-11", color: "crimson", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
+		"wind-12":       icon{filename: "wi-wind-beaufort-12", color: "crimson", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
+		"wind-N":        icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 180.0, scale: wiScale, alpha: wiAlpha, shadow: true}, // N
+		"wind-NNE":      icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 202.5, scale: wiScale, alpha: wiAlpha, shadow: true}, // NNE
+		"wind-NE":       icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 225.0, scale: wiScale, alpha: wiAlpha, shadow: true}, // NE
+		"wind-ENE":      icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 247.5, scale: wiScale, alpha: wiAlpha, shadow: true}, // ENE
+		"wind-E":        icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 270.0, scale: wiScale, alpha: wiAlpha, shadow: true}, // E
+		"wind-ESE":      icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 292.5, scale: wiScale, alpha: wiAlpha, shadow: true}, // ESE
+		"wind-SE":       icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 315.0, scale: wiScale, alpha: wiAlpha, shadow: true}, // SE
+		"wind-SSE":      icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 337.5, scale: wiScale, alpha: wiAlpha, shadow: true}, // SSE
+		"wind-S":        icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 0.0, scale: wiScale, alpha: wiAlpha, shadow: true},   // S
+		"wind-SSW":      icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 22.5, scale: wiScale, alpha: wiAlpha, shadow: true},  // SSW
+		"wind-SW":       icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 45.0, scale: wiScale, alpha: wiAlpha, shadow: true},  // SW
+		"wind-WSW":      icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 67.5, scale: wiScale, alpha: wiAlpha, shadow: true},  // WSW
+		"wind-W":        icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 90.0, scale: wiScale, alpha: wiAlpha, shadow: true},  // W
+		"wind-WNW":      icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 112.5, scale: wiScale, alpha: wiAlpha, shadow: true}, // WNW
+		"wind-NW":       icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 135.0, scale: wiScale, alpha: wiAlpha, shadow: true}, // NW
+		"wind-NNW":      icon{filename: windDegIcon, color: wiColor, width: wiW, height: wiW, rotate: 157.5, scale: wiScale, alpha: wiAlpha, shadow: true}, // NNW
+		"moon-0":        icon{filename: "wi-moon-alt-new", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
+		"moon-1":        icon{filename: "wi-moon-alt-waxing-crescent-5", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
+		"moon-2":        icon{filename: "wi-moon-alt-first-quarter", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
+		"moon-3":        icon{filename: "wi-moon-alt-waxing-gibbous-5", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
+		"moon-4":        icon{filename: "wi-moon-alt-full", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
+		"moon-5":        icon{filename: "wi-moon-alt-waning-gibbous-5", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
+		"moon-6":        icon{filename: "wi-moon-alt-third-quarter", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
+		"moon-7":        icon{filename: "wi-moon-alt-waning-crescent-5", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
+		"moon-8":        icon{filename: "wi-moon-alt-new", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
+		"brolly":        icon{filename: "wi-umbrella", color: "#66ff99", width: wiW, height: wiW, scale: (wiScale * 1.2), alpha: 1, shadow: true},
+		"humidity":      icon{filename: "wi-humidity", color: "#66ff99", width: wiW, height: wiW, scale: (wiScale * 1.2), alpha: 1, shadow: true},
+		"snowflake":     icon{filename: "wi-snowflake-cold", color: "#66ff99", width: wiW, height: wiW, scale: (wiScale * 1.2), alpha: 1, shadow: true},
+		"Rapid Transit": icon{filename: "mbta-t-train", color: "red", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: true},
+		"Commuter Rail": icon{filename: "mbta-commuter", color: "purple", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: true},
+		"Local Bus":     icon{filename: "mbta-bus", color: "silver", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: false},
+		"The Ride":      icon{filename: "mbta-the-ride", color: "#52bbc5", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: false},
+		"Ferry":         icon{filename: "mbta-ferry", color: "#008eaa", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: false},
 	}
 	iconMap = im
 }
@@ -131,9 +136,7 @@ func getIcon(s string) icon {
 		fmt.Println("bogus", v)
 		v = icon{filename: "wi-alien", color: "red", width: miW, height: miW}
 	}
-
 	return v
-
 }
 
 func iconFile(i icon) string {

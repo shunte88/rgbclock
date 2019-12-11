@@ -1,13 +1,16 @@
 LMS:
+  active: true
   IP: "192.168.1.25"
   port: 9000
   player: "b8:27:eb:70:71:5c"
+  remaining: true
 RGB:
   scroll_limit: 28
   mapper: "U-maper;Rotate:180"
   fontfile: "font/LCDM2U__.TTF"
   fontfile2: "font/Roboto-Black.ttf"
   folding: true
+  experiment: false
   rows: 64
   cols: 64
   parallel: 1
@@ -18,8 +21,21 @@ RGB:
   layout: full
   daybright: 20
   #nightbright: 10
-  nightbright: 3
-  showbright: 1
+  nightbright: 10
+  showbright: true
+  colorgrad1: "45a24740"
+  #colorgrad2: "33336640"
+  #colorgrad1: "34e89e40"
+  colorgrad2: "0f344340"
+transport:
+  offset: 25
+  route: "Red,47"
+  #stop: "place-cntsq,1816,2755,1123"
+  stop: "place-cntsq,1816"
+  apiEnv: MBTA_API_KEY_V3
+  active:
+    from: "04:50 AM"
+    until: "07:30 AM"
 simple:
   style: 'style="fill: %s" fill-opacity="1.0" stroke-opacity="0.4" stroke="black" stroke-width="1"'
   detail: true

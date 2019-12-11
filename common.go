@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"image/color"
 	"image/draw"
 	"strings"
 	"sync"
@@ -22,6 +24,7 @@ var (
 	feeds       []interface{}
 	folding     bool = false
 	detail      bool = false
+	experiment  bool = false
 	clockw      int  = 64
 	clockh      int  = 64
 	mode        bool
@@ -49,8 +52,8 @@ var (
 	scroll           int    = 22
 	w                Weather
 	// we can override this via config
-	iconStyle string = `style="fill: %s" fill-opacity="1.0" stroke-opacity="0.4" stroke="black" stroke-width="1"`
-
+	iconStyle   string = `style="fill: %s" fill-opacity="1.0" stroke-opacity="0.4" stroke="black" stroke-width="1"`
+	remaining          = false
 	imIcon      iconCache
 	imWind      draw.Image
 	imWindDir   iconCache
@@ -62,14 +65,17 @@ var (
 	imPrecip    iconCache
 	imSnow      iconCache
 	imHumid     iconCache
-	fontfile    = `font/LCDM2B__.TTF`
-	fontfile2   = `font/Roboto-Thin.ttf`
-	lastHorizon = ""
-	brightness  = 20
-	lastNews    = time.Now().Add(-24 * time.Hour)
-	sunrise     = time.Now()
-	sunset      = time.Now()
+	fontfile           = `font/LCDM2B__.TTF`
+	fontfile2          = `font/Roboto-Thin.ttf`
+	lastHorizon        = ``
+	brightness         = 20
+	colorgrad1  string = `#56ccf240`
+	colorgrad2  string = `#2f80ed40`
+	lastNews           = time.Now().Add(-24 * time.Hour)
+	sunrise            = time.Now()
+	sunset             = time.Now()
 	lms         *LMSServer
+	transit     *MBTA
 )
 
 const (
@@ -108,6 +114,27 @@ func containsI(a string, b string) bool {
 
 func toggleMode() {
 	mode = !mode
+}
+
+func parseHexColor(x string) (c color.RGBA) {
+	x = strings.TrimPrefix(x, "#")
+	c.A = 255
+	if len(x) == 3 {
+		format := "%1x%1x%1x"
+		fmt.Sscanf(x, format, &c.R, &c.G, &c.B)
+		c.R |= c.R << 4
+		c.G |= c.G << 4
+		c.B |= c.B << 4
+	}
+	if len(x) == 6 {
+		format := "%02x%02x%02x"
+		fmt.Sscanf(x, format, &c.R, &c.G, &c.B)
+	}
+	if len(x) == 8 {
+		format := "%02x%02x%02x%02x"
+		fmt.Sscanf(x, format, &c.R, &c.G, &c.B, &c.A)
+	}
+	return
 }
 
 func checkFatal(err error) {

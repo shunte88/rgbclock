@@ -12,6 +12,7 @@ import (
 	"math"
 	"net/http"
 	"reflect"
+	"strconv"
 	"sync"
 	"time"
 
@@ -80,9 +81,9 @@ type LMSDetail struct {
 		Title       string      `json:"title,omitempty"`
 		Year        string      `json:"year,omitempty"`
 	} `json:"remoteMeta,omitempty"`
-	SeqNo          int     `json:"seq_no"`
-	Signalstrength int     `json:"signalstrength"`
-	Time           float64 `json:"time"`
+	SeqNo          int         `json:"seq_no"`
+	Signalstrength int         `json:"signalstrength"`
+	Time           interface{} `json:"time"`
 }
 
 //http://htmlpreview.github.io/?https://raw.githubusercontent.com/Logitech/slimserver/public/7.9/HTML/EN/html/docs/cli-api.html
@@ -169,6 +170,7 @@ type LMSPlayer struct {
 	Playername  string
 	IP          string
 	Mode        string
+	Bitty       string // not Little Britain :)
 	Artist      *InfoLabel
 	Album       *InfoLabel
 	Title       *InfoLabel
@@ -182,13 +184,15 @@ type LMSPlayer struct {
 	TimeStr     string
 	duration    float64
 	DurStr      string
+	remaining   float64
+	RemStr      string
 	Percent     float64
 	remote      bool
 	arturl      string
 	coverart    draw.Image
 	Bitrate     string
-	Samplesize  string
-	Samplerate  string
+	Samplesize  float64
+	Samplerate  float64
 	Volume      int
 	Year        string
 }
@@ -216,6 +220,9 @@ func NewLMSPlayer(player string) *LMSPlayer {
 		Playername:  ``,
 		IP:          ``,
 		Mode:        ``,
+		Bitty:       `CD`,
+		Samplesize:  44.1,
+		Samplerate:  16,
 		Artist:      NewInfoLabel(30, 1, d2, true, false),
 		Album:       NewInfoLabel(30, 2, d1, true, false),
 		Title:       NewInfoLabel(30, 1, d2, true, false),
@@ -228,6 +235,8 @@ func NewLMSPlayer(player string) *LMSPlayer {
 		TimeStr:     `00:00`,
 		duration:    0.00,
 		DurStr:      `00:00`,
+		remaining:   0.00,
+		RemStr:      `00:00`,
 		Percent:     0,
 		remote:      false,
 		Volume:      0,
@@ -238,14 +247,23 @@ func NewLMSPlayer(player string) *LMSPlayer {
 func (p *LMSPlayer) setPercent() {
 	if 0 != p.duration {
 		p.Percent = 100 * p.time / p.duration
+		p.remaining = p.duration - p.time
+		p.RemStr = `-` + p.displayTime(p.remaining)
 	} else {
 		p.Percent = 0.00
+		p.remaining = 0.00
+		p.RemStr = `00:00`
 	}
 }
 
 func (p *LMSPlayer) displayTime(t float64) string {
-	// TODO: modify to test for hours
-	return fmt.Sprintf("%02.0f:%02.0f", math.Floor(t/60), math.Floor(math.Mod(t, 60)))
+	hr := ``
+	hours := math.Floor(t / 60 / 60)
+	if hours > 0 {
+		hr = fmt.Sprintf("%02.0f:", hours)
+		t -= hours * 3600
+	}
+	return fmt.Sprintf("%s%02.0f:%02.0f", hr, math.Floor(t/60), math.Floor(math.Mod(t, 60)))
 }
 
 func (p *LMSPlayer) setDuration(d float64) {
@@ -405,8 +423,10 @@ func (ls *LMSServer) updatePlayer() {
 				chkp := ls.Player.Title.GetText()
 
 				ls.Player.Volume = s.MixerVolume
-				ls.Player.setTime(s.Time)
 
+				if t, ok := s.Time.(float64); ok {
+					ls.Player.setTime(t)
+				}
 				if d, ok := s.Duration.(float64); ok {
 					ls.Player.setDuration(d)
 				}
@@ -433,9 +453,18 @@ func (ls *LMSServer) updatePlayer() {
 						artist = s.PlaylistLoop[0].Trackartist
 					}
 					ls.Player.Bitrate = s.PlaylistLoop[0].Bitrate
-					ls.Player.Samplesize = s.PlaylistLoop[0].Samplesize
-					ls.Player.Samplerate = s.PlaylistLoop[0].Samplerate
-
+					f := s.PlaylistLoop[0].Samplesize
+					ls.Player.Samplesize, err = strconv.ParseFloat(f, 64)
+					if nil != err {
+						ls.Player.Samplesize = 16
+					}
+					f = s.PlaylistLoop[0].Samplerate
+					ls.Player.Samplerate, err = strconv.ParseFloat(f, 64)
+					if nil != err {
+						ls.Player.Samplerate = 44.1
+					} else {
+						ls.Player.Samplerate /= 1000
+					}
 					ls.Player.Artist.SetText(artist)
 					ls.Player.Album.SetText(s.PlaylistLoop[0].Album)
 					ls.Player.Composer.SetText(s.PlaylistLoop[0].Composer)
@@ -453,6 +482,17 @@ func (ls *LMSServer) updatePlayer() {
 					ls.Player.Year = s.PlaylistLoop[0].Year
 					ls.Player.Genre = s.PlaylistLoop[0].Genre
 					//fmt.Printf("%v\n", s.PlaylistLoop[0].ArtworkURL)
+
+					switch ls.Player.Samplesize {
+					case 1:
+						ls.Player.Bitty = fmt.Sprintf("• DSD%v •", math.Floor(ls.Player.Samplerate/44.1))
+					default:
+						ls.Player.Bitty = fmt.Sprintf("%vb • %vkHz", ls.Player.Samplesize, ls.Player.Samplerate)
+					}
+
+				}
+				if "" == ls.Player.Year || "0" == ls.Player.Year {
+					ls.Player.Year = "????"
 				}
 
 				if chka != ls.Player.Album.GetText() ||

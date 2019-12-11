@@ -14,6 +14,7 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/fogleman/gg"
+	"github.com/fsnotify/fsnotify"
 	"github.com/golang/freetype/truetype"
 	rgbmatrix "github.com/mcuadros/go-rpi-rgb-led-matrix"
 	"github.com/spf13/viper"
@@ -62,6 +63,10 @@ func init() {
 	scroll = viper.GetInt("RGB.scroll_limit")
 	hardware = viper.GetString("RGB.hardware")
 	showbright = viper.GetBool("RGB.showbright")
+	experiment = viper.GetBool("RGB.experiment")
+
+	colorgrad1 = viper.GetString("RGB.colorgrad1")
+	colorgrad2 = viper.GetString("RGB.colorgrad2")
 
 	detail = viper.GetBool(layout + ".detail")
 	clockw = viper.GetInt(layout + ".clock.width")
@@ -82,14 +87,58 @@ func init() {
 	// init icon map (dynamic scaling)
 	mapInit()
 
+	remaining = viper.GetBool("LMS.remaining")
 	lmsIP := viper.GetString("LMS.IP")
 	lmsPort := viper.GetInt("LMS.port")
 	lmsPlayer := viper.GetString("LMS.player")
 	lms = NewLMSServer(lmsIP, lmsPort, lmsPlayer)
 
+	offset := viper.GetInt("transport.offset")
+	route := viper.GetString("transport.route")
+	stop := viper.GetString("transport.stop")
+	activeFrom, err := parseTime(viper.GetString("transport.active.from"))
+	if nil != err {
+		activeFrom, _ = parseTime(`04:30 AM`)
+	}
+	activeUntil, err := parseTime(viper.GetString("transport.active.until"))
+	if nil != err {
+		activeFrom, _ = parseTime(`09:30 AM`)
+	}
+	api := os.Getenv(viper.GetString("transport.ApiEnv"))
+
+	transit = NewMBTAClient(api, route, stop, activeFrom, activeUntil, time.Duration(offset)*time.Minute)
+
+	viper.WatchConfig()
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		daybright = viper.GetInt("RGB.daybright")
+		if daybright < 0 || daybright > 100 {
+			daybright = 20
+		}
+		nightbright = viper.GetInt("RGB.nightbright")
+		if nightbright < 0 || nightbright > 100 {
+			nightbright = daybright
+		}
+
+		showbright = viper.GetBool("RGB.showbright")
+		experiment = viper.GetBool("RGB.experiment")
+
+		activeFrom, err = parseTime(viper.GetString("transport.active.from"))
+		if nil != err {
+			activeFrom, _ = parseTime(`04:30 AM`)
+		}
+		activeUntil, err = parseTime(viper.GetString("transport.active.until"))
+		if nil != err {
+			activeFrom, _ = parseTime(`09:30 AM`)
+		}
+
+		transit.SetActiveHours(activeFrom, activeUntil)
+
+	})
+
 }
 
 func main() {
+
 	/*
 		defer func() {
 			if err := recover(); err != nil {
@@ -114,9 +163,9 @@ func main() {
 	config.DisableHardwarePulsing = false
 
 	// fixed assets
-	imPrecip, _ = cacheImage(`brolly`, imPrecip, 0.00)
-	imHumid, _ = cacheImage(`humidity`, imHumid, 0.00)
-	//imSnow, _ = cacheImage(`snowflake`, imSnow, 0.00)
+	imPrecip, _ = cacheImage(`brolly`, imPrecip, 0.00, ``)
+	imHumid, _ = cacheImage(`humidity`, imHumid, 0.00, ``)
+	//imSnow, _ = cacheImage(`snowflake`, imSnow, 0.00,``)
 	togweather := false
 
 	// concurrent updates
@@ -171,6 +220,14 @@ func main() {
 		Size: hf * 0.066,
 	})
 
+	mbtaface := truetype.NewFace(font, &truetype.Options{
+		Size: hf * 0.066,
+	})
+
+	transit.SetFace(mbtaface)
+	transit.Start()
+	defer transit.Stop()
+
 	m, err := rgbmatrix.NewRGBLedMatrix(config)
 	checkFatal(err)
 
@@ -184,22 +241,9 @@ func main() {
 
 	// eye-candy
 	grad := gg.NewRadialGradient(cx, cy, r+2, 0, 0, r+2)
-	grad.AddColorStop(0, color.RGBA{69, 162, 71, 64})
-	grad.AddColorStop(1, color.RGBA{51, 51, 102, 64})
 
-	/*
-	   Blue Sky #56ccf2 - #2f80ed
-	   Blue Lagoon #43c6ac - #191654
-	   Dawn #f3904f - #3b4371
-	   Dusk #2c3e50 - #fd746c
-	   Pacific Dream #34e89e - #0f3443
-	   Partly Cloudy Gradient ( #DAE2F8 - #D6A4A4 )
-	   Sunny Gradient ( #FF4E50 - #F9D423 )
-	   Cloudy Gradient ( #ECE9E6 - #FFFFFF )
-	   Snowing Gradient ( #E6DADA - #274046 )
-	   Rain Gradient ( #616161 - #9BC5C3 )
-	   Fog Gradient ( #757F9A - #D7DDE8 )
-	*/
+	grad.AddColorStop(0, parseHexColor(colorgrad1))
+	grad.AddColorStop(1, parseHexColor(colorgrad2))
 
 	// using a 2nd copy of the font for InfoLabel as the mutex seems to cause problems
 	xlmsface := truetype.NewFace(font, &truetype.Options{
@@ -222,6 +266,9 @@ func main() {
 	defer lms.Stop()
 
 	//pic := 0 //debug
+
+	angle := 0.20
+	inca := angle
 
 	for {
 
@@ -284,22 +331,6 @@ func main() {
 		dc.SetHexColor("#ff0000")
 		dc.DrawArc(float64(cx), float64(cy), float64(r), degToRadians(0), degToRadians(ea))
 		dc.Stroke()
-
-		/*
-				ts := t.Format("15:04")
-				if 0 == int(s)%2 {
-					ts = strings.Replace(ts, ":", " ", -1)
-				}
-			dc.SetHexColor("#660000")
-			dc.SetFontFace(zface)
-			dc.DrawStringAnchored(ts, wf/2, hf*0.47, 0.5, 0.5)
-			dc.DrawStringAnchored(colon, wf/2, hf/2, 0.5, 0.5)
-
-			dc.SetHexColor("#ff0000")
-			dc.SetFontFace(face)
-			dc.DrawStringAnchored(ts, wf/2, hf*0.47, 0.5, 0.5)
-			dc.DrawStringAnchored(colon, wf/2, hf/2, 0.5, 0.5)
-		*/
 
 		// tighter time format, specically with non-monospaced fonts
 		ts := t.Format("15 04")
@@ -368,7 +399,7 @@ func main() {
 			placeWeatherDetail(dc, hf, dpface)
 		}
 
-		if "full" == layout {
+		if `full` == layout {
 			dc.SetHexColor("#ff9900")
 			dc.SetFontFace(dtface)
 			temps = hackaDate(t)
@@ -381,25 +412,21 @@ func main() {
 		}
 
 		if `play` == lms.Player.Mode {
-			dst := imaging.Resize(dc.Image(), 65, 65, imaging.CatmullRom) //Lanczos)
-			dc.DrawImage(dst, 0, 0)
-			dc.SetHexColor("#000000")
-			dc.DrawRectangle(65, 0, 65, 65)
-			dc.Fill()
-			dc.DrawRectangle(0, 65, 127, 63)
-			dc.Fill()
+
+			pinClockTop(dc)
+
 			if mode {
 				placeWeatherDetail(dc, hf/2, dptface)
 			} else {
-				dst = imaging.Resize(lms.Coverart(), 64, 64, imaging.Lanczos)
+				dst := imaging.Resize(lms.Coverart(), 64, 64, imaging.Lanczos)
 				dc.DrawImage(dst, 65, 0)
 			}
 
-			dst = imaging.Resize(lms.Coverart(), 126, 44, imaging.Lanczos)
+			dst := imaging.Resize(lms.Coverart(), 126, 49, imaging.Lanczos)
 			dst = imaging.Blur(imaging.AdjustBrightness(dst, -40), 6.5)
 			dc.DrawImage(dst, 1, 66)
 
-			dc.SetHexColor("#ff9900")
+			dc.SetHexColor("#ff9900cc")
 			dc.SetFontFace(lmsface)
 			/*
 				// text version
@@ -410,28 +437,67 @@ func main() {
 			*/
 
 			// graphical version - smoother scrolling
-			dc.DrawImageAnchored(lms.Player.Albumartist.Image(), int(W/2), int(cy+11), 0.5, 0.5)
-			dc.DrawImageAnchored(lms.Player.Album.Image(), int(W/2), int(cy+21), 0.5, 0.5)
-			dc.DrawImageAnchored(lms.Player.Title.Image(), int(W/2), int(cy+31), 0.5, 0.5)
-			dc.DrawImageAnchored(lms.Player.Artist.Image(), int(W/2), int(cy+41), 0.5, 0.5)
+			pos := int(cy + 11)
+			dc.DrawImageAnchored(lms.Player.Albumartist.Image(), int(W/2), pos, 0.5, 0.5)
+			pos += 9
+			dc.DrawImageAnchored(lms.Player.Album.Image(), int(W/2), pos, 0.5, 0.5)
+			pos += 9
+			dc.DrawImageAnchored(lms.Player.Title.Image(), int(W/2), pos, 0.5, 0.5)
+			pos += 9
+			dc.DrawImageAnchored(lms.Player.Artist.Image(), int(W/2), pos, 0.5, 0.5)
+			dc.DrawStringAnchored(fmt.Sprintf("• %v •", lms.Player.Year), float64(W/2), float64(cy+44), 0.5, 0.5)
 
-			dc.SetFontFace(lmsface)
-			dc.SetHexColor("#000000")
-			dc.SetLineWidth(lw - 2)
-			dc.DrawRectangle(0, 67, 127, 63)
-			dc.Stroke()
-			dc.SetLineWidth(0.5)
+			placeBorderZone(dc, lmsface, lw, 68, 50)
+			drawHorizontalBar(dc, 10, 115, lms.Player.Percent)
+			base := float64(H - 9 + 4)
 			dc.SetHexColor("#ff9900")
-			dc.DrawRectangle(0, 67, 127, 45)
-			dc.Stroke()
-			drawHorizontalBar(dc, 10, 110, lms.Player.Percent)
-			dc.SetHexColor("#ff9900")
-			dc.DrawStringAnchored(lms.Player.TimeStr, 16, float64(H-9), 0.5, 0.5)
-			dc.DrawStringAnchored(lms.Player.DurStr, float64(W-16), float64(H-9), 0.5, 0.5)
-			dc.DrawStringAnchored(lms.Player.Mode, float64(W/2), float64(H-9), 0.5, 0.5)
-			dc.SetLineWidth(lw)
+			dc.DrawStringAnchored(lms.Player.TimeStr, 16, base, 0.5, 0.5)
+			if remaining {
+				if len(lms.Player.RemStr) == 8 {
+					dc.DrawStringAnchored(lms.Player.RemStr, float64(W-22), base, 0.5, 0.5)
+				} else {
+					dc.DrawStringAnchored(lms.Player.RemStr, float64(W-18), base, 0.5, 0.5)
+				}
+			} else {
+				if len(lms.Player.DurStr) == 8 {
+					dc.DrawStringAnchored(lms.Player.DurStr, float64(W-20), base, 0.5, 0.5)
+				} else {
+					dc.DrawStringAnchored(lms.Player.DurStr, float64(W-16), base, 0.5, 0.5)
+				}
+			}
+			dc.SetHexColor("#0099ffcc")
+			dc.DrawStringAnchored(lms.Player.Bitty, float64(W/2), base, 0.5, 0.5)
+		} else {
+			if transit.Display {
+				pinClockTop(dc)
+				placeWeatherDetail(dc, hf/2, dptface)
+				// active transit here - top 3
+				noData := true
+				pos := int(cy + 16)
+				for pred := range transit.Predictions() {
+					dc.DrawImageAnchored(pred, int(W/2), pos, 0.5, 0.5)
+					pos += 16
+					noData = false
+				}
+				if noData {
+					dc.SetHexColor("#ff9900cc")
+					dc.SetFontFace(sface)
+					dc.DrawStringAnchored(`WAITING`, float64(W/2), float64(pos+3), 0.5, 0.5)
+					dc.DrawStringAnchored(`FOR MBTA`, float64(W/2), float64(pos+19), 0.5, 0.5)
+				}
+				placeBorderZone(dc, lmsface, lw, 60, 55)
+			}
 		}
+		dc.SetLineWidth(lw)
 
+		if experiment {
+			dc.DrawImageAnchored(imaging.Rotate(dc.Image(), -angle, image.Black), int(cx), int(cy), 0.5, 0.5)
+
+			angle = angle + inca
+			if angle > 360 || angle < 0 {
+				inca *= -1
+			}
+		}
 		//gg.SavePNG(fmt.Sprintf("rgbclock%010d.png", pic), imaging.Resize(dc.Image(), W*4, H*4, imaging.Lanczos))
 		//pic++
 
@@ -470,6 +536,28 @@ func placeWeatherDetail(dc *gg.Context, hf float64, dpface font.Face) {
 	placeDetail(dc, w.Current.Daypart2, imIconDP2.image, hf)
 	placeDetail(dc, w.Current.Daypart3, imIconDP3.image, hf)
 	placeDetail(dc, w.Current.Daypart4, imIconDP4.image, hf)
+}
+
+func placeBorderZone(dc *gg.Context, lmsface font.Face, lw, y1, y2 float64) {
+	dc.SetFontFace(lmsface)
+	dc.SetHexColor("#000000")
+	dc.SetLineWidth(lw - 2)
+	dc.DrawRectangle(0, 67, 127, y1)
+	dc.Stroke()
+	dc.SetLineWidth(0.5)
+	dc.SetHexColor("#ff9900")
+	dc.DrawRectangle(0, 67, 127, y2)
+	dc.Stroke()
+}
+
+func pinClockTop(dc *gg.Context) {
+	dst := imaging.Resize(dc.Image(), 65, 65, imaging.CatmullRom) //Lanczos)
+	dc.DrawImage(dst, 0, 0)
+	dc.SetHexColor("#000000")
+	dc.DrawRectangle(65, 0, 65, 65)
+	dc.Fill()
+	dc.DrawRectangle(0, 65, 127, 63)
+	dc.Fill()
 }
 
 func placeDetail(dc *gg.Context, d Daypart, wi draw.Image, hf float64) {
@@ -521,17 +609,17 @@ func rotator() {
 	idx = append(idx[1:], idx[0:1]...)
 }
 
-func drawHorizontalBar(dc *gg.Context, x, y float64, pcnt float64) {
+func drawHorizontalBar(dc *gg.Context, x, y, pcnt float64) {
 	dc.SetLineWidth(1)
 	l := float64(W) - (2 * x)
 	lp := (l - 2.00) * (pcnt / 100.00)
 	dc.SetHexColor("#000000")
 	dc.DrawRectangle(x+1, y+1, l-2, 2)
 	dc.Fill()
-	dc.SetHexColor("#ffff00")
+	dc.SetHexColor("#ff9900") // bar color
 	dc.DrawRectangle(x+1, y+1, lp, 2)
 	dc.Fill()
-	dc.SetHexColor("#ff9900") // ("#ffffff")
+	dc.SetHexColor("#ff9900")
 	dc.DrawRectangle(x, y, l, 4)
 	dc.Stroke()
 }

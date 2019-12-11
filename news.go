@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/mmcdole/gofeed"
@@ -14,10 +13,14 @@ type freedres struct {
 
 func news() {
 	f := fetchFeeds()
+	news := ``
+	sep := ``
 	for _, fl := range f {
 		for _, fi := range fl.Items {
 			if fi.PublishedParsed.After(lastNews) {
-				fmt.Printf("%v\n%v\n", fi.Title, fi.Description)
+				//fmt.Printf("%v\n%v\n", fi.Title, fi.Description)
+				news += sep + fi.Title
+				sep = "\n"
 			}
 		}
 	}

@@ -4,7 +4,7 @@ The RGB Clock And Roll uses 4 64x64 RGB panels from [Adafruit][ada]
 
 Panels are driven using the phenominal [hzeller RGB Library] with a modified [Go binding]
 
-The [Go binding] has been modified to expose the brightness capability.  The panel brightness is adjusts at dawn and dusk.  More details on the modification to follow.
+The [Go binding] has been modified to expose the brightness capability.  The panel brightness is adjusted at dawn and dusk.  More details on the modification to follow.
 
 An [Adafruit HAT] or [Adafruit Bonnet] modified for PWM operation connect the RGB matrix panels to a Raspberry Pi
 

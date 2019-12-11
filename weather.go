@@ -53,7 +53,7 @@ func parseTime(t string) (time.Time, error) {
 	return time.Parse("03:04 PM", t)
 }
 
-func cacheImage(current string, ic iconCache, scale float64) (iconCache, error) {
+func cacheImage(current string, ic iconCache, scale float64, color string) (iconCache, error) {
 
 	var err error
 	if ic.last != current {
@@ -61,6 +61,10 @@ func cacheImage(current string, ic iconCache, scale float64) (iconCache, error) 
 		if 0.00 != scale {
 			i.scale = scale
 		}
+		if `` != color {
+			i.color = color
+		}
+		//fmt.Println(">"+current+"<", i)
 		ic.m.Lock()
 		ic.image, err = getImageIconWIP(i)
 		if err != nil {
@@ -105,11 +109,10 @@ func weather() {
 	w.Current.Temperature =
 		strings.Replace(w.Current.Temperature, ".0", "", -1)
 
-	imIcon, err = cacheImage(w.Current.Icon, imIcon, 0.00)
+	imIcon, err = cacheImage(w.Current.Icon, imIcon, 0.00, ``)
 	checkFatal(err)
 	// debug here
 	if snap {
-		//fmt.Println(miW,"\n",imIcon.image.Bounds())
 		ft, err := os.Create("test.png")
 		checkFatal(err)
 		defer ft.Close()
@@ -117,16 +120,16 @@ func weather() {
 		snap = false
 	}
 
-	imIconDP1, err = cacheImage(w.Current.Daypart1.Icon, imIconDP1, 0.7)
+	imIconDP1, err = cacheImage(w.Current.Daypart1.Icon, imIconDP1, 0.7, ``)
 	checkFatal(err)
 
-	imIconDP2, err = cacheImage(w.Current.Daypart2.Icon, imIconDP2, 0.7)
+	imIconDP2, err = cacheImage(w.Current.Daypart2.Icon, imIconDP2, 0.7, ``)
 	checkFatal(err)
 
-	imIconDP3, err = cacheImage(w.Current.Daypart3.Icon, imIconDP3, 0.7)
+	imIconDP3, err = cacheImage(w.Current.Daypart3.Icon, imIconDP3, 0.7, ``)
 	checkFatal(err)
 
-	imIconDP4, err = cacheImage(w.Current.Daypart4.Icon, imIconDP4, 0.7)
+	imIconDP4, err = cacheImage(w.Current.Daypart4.Icon, imIconDP4, 0.7, ``)
 	checkFatal(err)
 
 	/*
@@ -139,7 +142,7 @@ func weather() {
 	*/
 
 	test := fmt.Sprintf("wind-%s", strings.Split(w.Current.Wind, " ")[0])
-	imWindDir, err = cacheImage(test, imWindDir, 0.00)
+	imWindDir, err = cacheImage(test, imWindDir, 0.00, ``)
 	checkFatal(err)
 
 	test = w.Current.Sunrise + "-" + w.Current.Sunset
@@ -152,7 +155,7 @@ func weather() {
 	lastHorizon = test
 
 	check, _ := parseTime(time.Now().Format("03:04 PM"))
-	if check.After(sunrise) && check.Before(sunset) {
+	if check.After(sunrise) && check.Before(sunset.Add(-time.Minute)) {
 		brightness = daybright
 		evut = nextEvent(check, sunset)
 	} else {
@@ -169,7 +172,7 @@ func weather() {
 	if hr != lastHour {
 		m := NewLuna(time.Now())
 		test := fmt.Sprintf("moon-%d", m.PhaseFix())
-		imMoon, err = cacheImage(test, imMoon, 0.00)
+		imMoon, err = cacheImage(test, imMoon, 0.00, ``)
 		checkFatal(err)
 	}
 	lastHour = hr
