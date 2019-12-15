@@ -26,6 +26,7 @@ type RGBPrediction struct {
 	stopID        string
 	color         string
 	countdown     string
+	stack         int
 	changed       int // -1 invalid, 0 new, 1 update
 	icon          iconCache
 	slice         *image.RGBA
@@ -132,6 +133,7 @@ func (m *MBTA) getPredicted() {
 		for i := range m.prediction {
 			m.prediction[i].changed = -1
 			m.prediction[i].countdown = ``
+			m.prediction[i].stack = 0
 		}
 		testOff := time.Now().Add(m.offset)
 
@@ -169,6 +171,7 @@ func (m *MBTA) getPredicted() {
 						stopID:        p.Stop.ID,
 						changed:       0,
 						countdown:     m.countdown(testArr),
+						stack:         0,
 						slice:         image.NewRGBA(image.Rect(0, 0, 1, 1)),
 						canvas:        image.NewRGBA(image.Rect(0, 0, 1, 1)),
 						color:         `#` + p.Route.Color,
@@ -180,6 +183,8 @@ func (m *MBTA) getPredicted() {
 							m.prediction[idx].departureTime = pp.departureTime
 							m.prediction[idx].countdown = pp.countdown
 							m.prediction[idx].changed = 1
+						} else {
+							m.prediction[idx].stack++
 						}
 					} else {
 						m.prediction = append(m.prediction, pp)
@@ -219,7 +224,11 @@ func (m *MBTA) getPredicted() {
 					Face: m.face,
 					Dot:  point,
 				}
-				d.DrawString(fmt.Sprintf("%v %v %v", this.routeID, this.direction, this.countdown))
+				others := ``
+				if this.stack > 0 {
+					others = fmt.Sprintf(" +%d", this.stack)
+				}
+				d.DrawString(fmt.Sprintf("%v %v %v%v", this.routeID, this.direction, this.countdown, others))
 				point = fixed.Point26_6{fixed.Int26_6(19 * 64), fixed.Int26_6((yy + 7) * 64)}
 				d.Dot = point
 				d.Src = image.NewUniform(image.White)
@@ -252,6 +261,7 @@ func (m *MBTA) countdown(t time.Time) string {
 	} else {
 		ret = `at stop`
 	}
+
 	return ret
 }
 

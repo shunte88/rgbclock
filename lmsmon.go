@@ -481,7 +481,6 @@ func (ls *LMSServer) updatePlayer() {
 					}
 					ls.Player.Year = s.PlaylistLoop[0].Year
 					ls.Player.Genre = s.PlaylistLoop[0].Genre
-					//fmt.Printf("%v\n", s.PlaylistLoop[0].ArtworkURL)
 
 					switch ls.Player.Samplesize {
 					case 1:

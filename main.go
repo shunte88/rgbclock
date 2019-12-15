@@ -82,8 +82,24 @@ func init() {
 
 	iconStyle = viper.GetString(layout + ".style")
 
-	feeds = viper.Get("feeds").([]interface{})
+	feeds := viper.Get("feeds").([]interface{})
+	newsDetail := viper.GetBool("news.detail")
+	seedTime := viper.GetString("news.window.time")
+	newsDur := viper.GetInt("news.window.duration")
+	newsRepeat := viper.GetInt("news.window.repeat")
 
+	if `` != seedTime {
+		news = InitNews(News{
+			Feeds:    feeds,
+			Detail:   newsDetail,
+			SeedTime: seedTime,
+			Width:    127,
+			Limit:    62,
+			Velocity: 2,
+			Duration: (time.Duration(newsDur) * time.Minute),
+			Repeat:   (time.Duration(newsRepeat) * time.Minute),
+		})
+	}
 	// init icon map (dynamic scaling)
 	mapInit()
 
@@ -172,7 +188,6 @@ func main() {
 	stop := sched(weather, 30*time.Second)
 	toggle := sched(toggleMode, 15*time.Second)
 	rotator := sched(rotator, 3*time.Second)
-	rssfeed := sched(news, 60*time.Minute)
 
 	wf := float64(clockw)
 	hf := float64(clockh)
@@ -250,6 +265,7 @@ func main() {
 		Size: hf * 0.066,
 		DPI:  72,
 	})
+
 	lms.Player.Albumartist.SetMaxlen(scroll)
 	lms.Player.Albumartist.SetFace(xlmsface, "#ff9900c0")
 	lms.Player.Album.SetMaxlen(scroll)
@@ -264,6 +280,16 @@ func main() {
 
 	lms.Start()
 	defer lms.Stop()
+
+	if nil != news {
+		newsface := truetype.NewFace(font, &truetype.Options{
+			Size: hf * 0.066,
+			DPI:  72,
+		})
+		news.SetFace(newsface)
+	}
+
+	defer newsStop()
 
 	//pic := 0 //debug
 
@@ -486,6 +512,14 @@ func main() {
 					dc.DrawStringAnchored(`FOR MBTA`, float64(W/2), float64(pos+19), 0.5, 0.5)
 				}
 				placeBorderZone(dc, lmsface, lw, 60, 55)
+			} else {
+				if news.Display() {
+					pinClockTop(dc)
+					placeWeatherDetail(dc, hf/2, dptface)
+					pos := int(cy + 2)
+					dc.DrawImageAnchored(news.Image(), 1, pos, 0, 0)
+					placeBorderZone(dc, lmsface, lw, 60, 59)
+				}
 			}
 		}
 		dc.SetLineWidth(lw)
@@ -519,7 +553,6 @@ func main() {
 	stop <- true
 	toggle <- true
 	rotator <- true
-	rssfeed <- true
 
 }
 

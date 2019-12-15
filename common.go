@@ -21,7 +21,6 @@ type feed struct {
 }
 
 var (
-	feeds       []interface{}
 	folding     bool = false
 	detail      bool = false
 	experiment  bool = false
@@ -71,9 +70,9 @@ var (
 	brightness         = 20
 	colorgrad1  string = `#56ccf240`
 	colorgrad2  string = `#2f80ed40`
-	lastNews           = time.Now().Add(-24 * time.Hour)
 	sunrise            = time.Now()
 	sunset             = time.Now()
+	news        *News
 	lms         *LMSServer
 	transit     *MBTA
 )

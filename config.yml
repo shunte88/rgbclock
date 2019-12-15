@@ -19,13 +19,10 @@ RGB:
   height: 128
   hardware: adafruit-hat-pwm
   layout: full
-  daybright: 20
-  #nightbright: 10
-  nightbright: 10
-  showbright: true
+  daybright: 30
+  nightbright: 15
+  showbright: false
   colorgrad1: "45a24740"
-  #colorgrad2: "33336640"
-  #colorgrad1: "34e89e40"
   colorgrad2: "0f344340"
 transport:
   offset: 25
@@ -36,6 +33,7 @@ transport:
   active:
     from: "04:50 AM"
     until: "07:30 AM"
+    window: 30
 simple:
   style: 'style="fill: %s" fill-opacity="1.0" stroke-opacity="0.4" stroke="black" stroke-width="1"'
   detail: true
@@ -74,3 +72,10 @@ feeds:
   -
     title: "BBC News International"
     link: "http://feeds.bbci.co.uk/news/world/rss.xml"
+news:
+  detail: true
+  active: true
+  window: 
+    time: 00:35
+    duration: 5
+    repeat: 60
