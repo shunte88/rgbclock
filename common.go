@@ -136,6 +136,15 @@ func parseHexColor(x string) (c color.RGBA) {
 	return
 }
 
+func intInSlice(a []int, x int) bool {
+	for _, n := range a {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}
+
 func checkFatal(err error) {
 	if err != nil {
 		panic(err)

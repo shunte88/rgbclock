@@ -84,16 +84,16 @@ func init() {
 
 	feeds := viper.Get("feeds").([]interface{})
 	newsDetail := viper.GetBool("news.detail")
-	seedTime := viper.GetString("news.window.time")
-	newsDur := viper.GetInt("news.window.duration")
-	newsRepeat := viper.GetInt("news.window.repeat")
+	seedTime := viper.GetString("news.window.time")  // time to display, seed - repeat duration affects actual time
+	newsDur := viper.GetInt("news.window.duration")  // minutes to display
+	newsRepeat := viper.GetInt("news.window.repeat") // minutes until next display
 
 	if `` != seedTime {
 		news = InitNews(News{
 			Feeds:    feeds,
 			Detail:   newsDetail,
 			SeedTime: seedTime,
-			Width:    127,
+			Width:    126,
 			Limit:    62,
 			Velocity: 2,
 			Duration: (time.Duration(newsDur) * time.Minute),
@@ -112,6 +112,7 @@ func init() {
 	offset := viper.GetInt("transport.offset")
 	route := viper.GetString("transport.route")
 	stop := viper.GetString("transport.stop")
+	activeDays := viper.GetIntSlice("transport.days") // 0=Sunday
 	activeFrom, err := parseTime(viper.GetString("transport.active.from"))
 	if nil != err {
 		activeFrom, _ = parseTime(`04:30 AM`)
@@ -122,7 +123,7 @@ func init() {
 	}
 	api := os.Getenv(viper.GetString("transport.ApiEnv"))
 
-	transit = NewMBTAClient(api, route, stop, activeFrom, activeUntil, time.Duration(offset)*time.Minute)
+	transit = NewMBTAClient(api, route, stop, activeFrom, activeUntil, activeDays, time.Duration(offset)*time.Minute)
 
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
@@ -146,8 +147,9 @@ func init() {
 		if nil != err {
 			activeFrom, _ = parseTime(`09:30 AM`)
 		}
+		activeDays = viper.GetIntSlice("transport.days") // 0=Sunday
 
-		transit.SetActiveHours(activeFrom, activeUntil)
+		transit.SetActiveHours(activeFrom, activeUntil, activeDays)
 
 	})
 
@@ -163,6 +165,7 @@ func main() {
 		}()
 	*/
 
+	// 4->9 (125%)
 	weather()
 
 	mode = true
@@ -283,7 +286,7 @@ func main() {
 
 	if nil != news {
 		newsface := truetype.NewFace(font, &truetype.Options{
-			Size: hf * 0.066,
+			Size: hf * 0.055,
 			DPI:  72,
 		})
 		news.SetFace(newsface)
@@ -312,6 +315,12 @@ func main() {
 
 			dc.SetHexColor("#000000")
 			dc.Clear()
+
+			// first of the month - rabbit-rabbit-rabbit
+			var imBunny iconCache
+			imBunny, _ = cacheImage(`bunny`, imBunny, 0.0, ``)
+			dc.DrawImageAnchored(imBunny.image, 14, H-13, 0.5, 0.5)
+			dc.DrawImageAnchored(imaging.FlipH(imBunny.image), W-14, H-13, 0.5, 0.5)
 
 			dc.SetFillStyle(grad)
 			dc.DrawCircle(cx, cy, r+1)

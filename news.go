@@ -41,6 +41,7 @@ type News struct {
 	canvas     *image.RGBA
 	place      image.Rectangle
 	display    bool
+	active     bool
 }
 
 type freedres struct {
@@ -63,13 +64,14 @@ func InitNews(nc News) *News {
 		Repeat:     nc.Repeat,
 		face:       basicfont.Face7x13,
 		fontHeight: 13,
+		active:     false,
 	}
 
 	if n.Velocity == 0 {
 		n.Velocity = 6
 	}
 	if n.Width == 0 {
-		n.Width = 128
+		n.Width = 126
 	}
 
 	n.nextTime()
@@ -111,6 +113,8 @@ func (n *News) nextTime() {
 	waitDuration = time.Duration(n.endTime.UnixNano() - time.Now().UnixNano())
 	n.resetTimer = time.AfterFunc(waitDuration, func() { n.nextTime() })
 
+	n.stopScroller()
+
 }
 
 // SetFace defines font face
@@ -136,17 +140,21 @@ func (n *News) Display() bool {
 // getNews fetch news text
 func (n *News) paintCanvas() {
 
+	n.stopScroller()
+
 	n.mux.Lock()
 	const H = 2000
 	const P = 2
 	dc := gg.NewContext(n.Width, H)
-	dc.SetHexColor("#0099ff")
+	dc.Clear()
+	dc.SetHexColor("#52bbc5cc")
 	dc.SetFontFace(n.face)
 	w, h := dc.MeasureMultilineString(strings.Join(dc.WordWrap(n.news, float64(n.Width-2)), "\n"), 1.2)
 	dc.DrawStringWrapped(n.news, 1, 1, 0, 0, float64(n.Width-2), 1.2, gg.AlignLeft)
 
 	nh := h + 5
 	n.canvas = image.NewRGBA(image.Rect(0, 0, int(w), int(nh)))
+	//n.canvas.
 	n.bnd = n.canvas.Bounds()
 	draw.Draw(n.canvas, n.bnd, dc.Image(), image.ZP, draw.Over)
 
@@ -158,18 +166,31 @@ func (n *News) paintCanvas() {
 
 	n.mux.Unlock()
 	if int(nh) > n.Limit {
-		n.marquee = sched(n.scroller, 400*time.Millisecond)
-	} else {
+		n.initScroller()
+	}
+}
+
+func (n *News) initScroller() {
+	n.stopScroller()
+	n.marquee = sched(n.scroller, 200*time.Millisecond)
+	n.active = true
+}
+
+func (n *News) stopScroller() {
+	if n.active {
 		n.marquee <- true
 	}
+	n.active = false
 }
 
 // marquee scrolls text through canvas
 func (n *News) scroller() {
 	if n.canvas.Bounds().Max.Y > n.Limit {
+		n.mux.Lock()
 		draw.Draw(n.slice, n.rct, n.canvas, n.rct.Min, draw.Src)
 		draw.Draw(n.canvas, n.bnd, n.canvas, n.bnd.Min.Add(n.pt), draw.Src)
 		draw.Draw(n.canvas, n.place, n.slice, n.rct.Min, draw.Src)
+		n.mux.Unlock()
 	}
 
 }
@@ -190,11 +211,13 @@ func (n *News) getNews() {
 	for _, fl := range f {
 		for _, fi := range fl.Items {
 			if fi.PublishedParsed.After(n.lastNews) {
-				n.news += sep + "• " + fi.Title
-				if n.Detail {
-					n.news += "\n" + fi.Description
+				if !strings.Contains(n.news, fi.Title) {
+					n.news += sep + "• " + fi.Title
+					if n.Detail {
+						n.news += "\n" + fi.Description
+					}
+					sep = "\n"
 				}
-				sep = "\n"
 			}
 		}
 	}

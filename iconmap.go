@@ -125,6 +125,8 @@ func mapInit() {
 		"Local Bus":     icon{filename: "mbta-bus", color: "silver", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: false},
 		"The Ride":      icon{filename: "mbta-the-ride", color: "#52bbc5", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: false},
 		"Ferry":         icon{filename: "mbta-ferry", color: "#008eaa", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: false},
+		//"bunny":         icon{filename: "first-bunny", color: "#0f344340", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: true},
+		"bunny": icon{filename: "first-bunny", color: "#0f3443f0", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: true},
 	}
 	iconMap = im
 }

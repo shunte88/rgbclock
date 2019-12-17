@@ -20,7 +20,7 @@ RGB:
   hardware: adafruit-hat-pwm
   layout: full
   daybright: 30
-  nightbright: 15
+  nightbright: 30
   showbright: false
   colorgrad1: "45a24740"
   colorgrad2: "0f344340"
@@ -31,6 +31,7 @@ transport:
   stop: "place-cntsq,1816"
   apiEnv: MBTA_API_KEY_V3
   active:
+    days: 1,2,3,4,5
     from: "04:50 AM"
     until: "07:30 AM"
     window: 30
@@ -76,6 +77,6 @@ news:
   detail: true
   active: true
   window: 
-    time: 00:35
+    time: 00:45
     duration: 5
     repeat: 60

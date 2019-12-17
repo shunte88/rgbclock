@@ -37,6 +37,7 @@ type RGBPrediction struct {
 type MBTA struct {
 	Display    bool
 	mc         *mbta.Client
+	days       []int
 	active     bool
 	update     chan bool
 	mux        sync.Mutex
@@ -51,10 +52,11 @@ type MBTA struct {
 }
 
 // NewMBTAClient initiate an MBTA client
-func NewMBTAClient(api, route, stop string, from, until time.Time, offset time.Duration) *MBTA {
+func NewMBTAClient(api, route, stop string, from, until time.Time, days []int, offset time.Duration) *MBTA {
 	return &MBTA{
 		mc:         mbta.NewClient(mbta.ClientConfig{APIKey: api}),
 		active:     false,
+		days:       days,
 		offset:     offset,
 		from:       from,
 		until:      until,
@@ -83,13 +85,15 @@ func (m *MBTA) Start() {
 }
 
 // SetActiveHours implements predictions window
-func (m *MBTA) SetActiveHours(from, until time.Time) {
+func (m *MBTA) SetActiveHours(from, until time.Time, days []int) {
 	if m.from != from {
 		m.from = from
 	}
-	if m.from != until {
+	if m.until != until {
 		m.until = until
 	}
+	m.days = days
+
 }
 
 // Stop updates
@@ -111,8 +115,9 @@ func (m *MBTA) indexOf(pp RGBPrediction) int {
 
 func (m *MBTA) getPredicted() {
 
+	day := int(time.Now().Weekday())
 	check, _ := parseTime(time.Now().Format("03:04 PM"))
-	if check.After(m.from) && check.Before(m.until) {
+	if check.After(m.from) && check.Before(m.until) && intInSlice(m.days, day) {
 		m.Display = true
 	} else {
 		m.Display = false
