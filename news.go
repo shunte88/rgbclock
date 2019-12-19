@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/draw"
 	"strings"
@@ -198,9 +197,10 @@ func (n *News) scroller() {
 // getNews fetch news text
 func (n *News) getNews() {
 
+	// shouldn't need this!
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println(err)
+			panic(err)
 		}
 	}()
 
@@ -209,14 +209,16 @@ func (n *News) getNews() {
 	n.news = ``
 	sep := ``
 	for _, fl := range f {
-		for _, fi := range fl.Items {
-			if fi.PublishedParsed.After(n.lastNews) {
-				if !strings.Contains(n.news, fi.Title) {
-					n.news += sep + "• " + fi.Title
-					if n.Detail {
-						n.news += "\n" + fi.Description
+		if fl != nil {
+			for xx, fi := range fl.Items {
+				if xx < 9 && fi.PublishedParsed != nil && fi.PublishedParsed.After(n.lastNews) {
+					if !strings.Contains(n.news, fi.Title) {
+						n.news += sep + "• " + fi.Title
+						if n.Detail {
+							n.news += "\n" + fi.Description
+						}
+						sep = "\n"
 					}
-					sep = "\n"
 				}
 			}
 		}
@@ -233,7 +235,9 @@ func (n *News) fetchFeeds() []*gofeed.Feed {
 
 	for f := range n.Feeds {
 		feed := n.Feeds[f].(map[interface{}]interface{})
+		//if feed["active"].(bool) {
 		go n.fetchFeed(feed["link"].(string), fc)
+		//}
 	}
 
 	var fs []*gofeed.Feed

@@ -31,7 +31,12 @@ transport:
   stop: "place-cntsq,1816"
   apiEnv: MBTA_API_KEY_V3
   active:
-    days: 1,2,3,4,5
+    days: 
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
     from: "04:50 AM"
     until: "07:30 AM"
     window: 30
@@ -65,18 +70,28 @@ full:
       alpha: 0.95
       width: 48
       scale: 1.3
-RSS: 0
 feeds:
   -
     title: "BBC News UK"
     link: "http://newsrss.bbc.co.uk/rss/newsonline_uk_edition/front_page/rss.xml"
+    # string flags only (yes/no)!
+    active: yes
+#  -
+#    title: "CNN: U.S."
+#    link: "http://rss.cnn.com/rss/cnn_us.rss"
+#    active: yes
   -
     title: "BBC News International"
     link: "http://feeds.bbci.co.uk/news/world/rss.xml"
+    active: yes
+#  -
+#    title: "CNN: Top Stories"
+#    link: "http://rss.cnn.com/rss/cnn_topstories.rss"
+#    active: no
 news:
   detail: true
   active: true
   window: 
-    time: 00:45
-    duration: 5
+    time: 00:30
+    duration: 4
     repeat: 60

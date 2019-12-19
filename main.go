@@ -95,7 +95,7 @@ func init() {
 			SeedTime: seedTime,
 			Width:    126,
 			Limit:    62,
-			Velocity: 2,
+			Velocity: 1,
 			Duration: (time.Duration(newsDur) * time.Minute),
 			Repeat:   (time.Duration(newsRepeat) * time.Minute),
 		})
@@ -112,7 +112,7 @@ func init() {
 	offset := viper.GetInt("transport.offset")
 	route := viper.GetString("transport.route")
 	stop := viper.GetString("transport.stop")
-	activeDays := viper.GetIntSlice("transport.days") // 0=Sunday
+	activeDays := viper.GetIntSlice("transport.active.days") // 0=Sunday
 	activeFrom, err := parseTime(viper.GetString("transport.active.from"))
 	if nil != err {
 		activeFrom, _ = parseTime(`04:30 AM`)
