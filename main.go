@@ -463,15 +463,7 @@ func main() {
 
 			dc.SetHexColor("#ff9900cc")
 			dc.SetFontFace(lmsface)
-			/*
-				// text version
-				dc.DrawStringAnchored(lms.Player.Albumartist.Display(), float64(W/2), float64(cy+8), 0.5, 0.5)
-				dc.DrawStringAnchored(lms.Player.Album.Display(), float64(W/2), float64(cy+18), 0.5, 0.5)
-				dc.DrawStringAnchored(lms.Player.Title.Display(), float64(W/2), float64(cy+28), 0.5, 0.5)
-				dc.DrawStringAnchored(lms.Player.Artist.Display(), float64(W/2), float64(cy+38), 0.5, 0.5)
-			*/
 
-			// graphical version - smoother scrolling
 			pos := int(cy + 11)
 			dc.DrawImageAnchored(lms.Player.Albumartist.Image(), int(W/2), pos, 0.5, 0.5)
 			pos += 9
@@ -584,11 +576,11 @@ func placeBorderZone(dc *gg.Context, lmsface font.Face, lw, y1, y2 float64) {
 	dc.SetFontFace(lmsface)
 	dc.SetHexColor("#000000")
 	dc.SetLineWidth(lw - 2)
-	dc.DrawRectangle(0, 67, 127, y1)
+	dc.DrawRectangle(0, 67, 128, y1)
 	dc.Stroke()
 	dc.SetLineWidth(0.5)
 	dc.SetHexColor("#ff9900")
-	dc.DrawRectangle(0, 67, 127, y2)
+	dc.DrawRectangle(0, 67, 128, y2)
 	dc.Stroke()
 }
 

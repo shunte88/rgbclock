@@ -92,6 +92,6 @@ news:
   detail: true
   active: true
   window: 
-    time: 00:30
+    time: 00:40
     duration: 4
     repeat: 60

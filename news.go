@@ -223,7 +223,7 @@ func (n *News) getNews() {
 			}
 		}
 	}
-	n.lastNews = time.Now()
+	n.lastNews = time.Now().UTC()
 
 	n.paintCanvas()
 
