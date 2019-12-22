@@ -21,7 +21,7 @@ RGB:
   layout: full
   daybright: 30
   nightbright: 30
-  showbright: false
+  showbright: rue
   colorgrad1: "45a24740"
   colorgrad2: "0f344340"
 transport:

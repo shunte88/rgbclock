@@ -51,7 +51,7 @@ type LMSDetail struct {
 		Duration       interface{} `json:"duration"`
 		Genre          string      `json:"genre,omitempty"`
 		ID             interface{} `json:"id"`
-		PlaylistIndex  int         `json:"playlist index"`
+		PlaylistIndex  interface{} `json:"playlist index"`
 		Remote         string      `json:"remote,omitempty"`
 		Samplesize     string      `json:"samplesize,omitempty"`
 		Samplerate     string      `json:"samplerate,omitempty"`
@@ -223,12 +223,12 @@ func NewLMSPlayer(player string) *LMSPlayer {
 		Bitty:       `CD`,
 		Samplesize:  44.1,
 		Samplerate:  16,
-		Artist:      NewInfoLabel(30, 1, d2, true, false),
-		Album:       NewInfoLabel(30, 2, d1, true, false),
-		Title:       NewInfoLabel(30, 1, d2, true, false),
-		Albumartist: NewInfoLabel(30, 2, d1, true, false),
-		Composer:    NewInfoLabel(30, 1, d2, true, false),
-		Conductor:   NewInfoLabel(30, 1, d1, true, false),
+		Artist:      NewInfoLabel(34, 1, d2, true, false),
+		Album:       NewInfoLabel(34, 2, d1, true, false),
+		Title:       NewInfoLabel(34, 1, d2, true, false),
+		Albumartist: NewInfoLabel(34, 2, d1, true, false),
+		Composer:    NewInfoLabel(34, 1, d2, true, false),
+		Conductor:   NewInfoLabel(34, 1, d1, true, false),
 		Genre:       ``,
 		coverid:     ``,
 		time:        0.00,

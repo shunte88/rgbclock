@@ -9,8 +9,6 @@ import (
 	"io"
 	"os"
 
-	//"strings"
-
 	svg "github.com/ajstarks/svgo"
 	"github.com/srwiley/oksvg"
 	"github.com/srwiley/rasterx"
@@ -140,6 +138,9 @@ func getImageIconWIP(i icon) (img draw.Image, err error) {
 	}
 	if i.shadow {
 		canvas.Use(0, 0, "#ICON", `style="filter: url(#SHADOW); fill: black"`, transform)
+	}
+	if i.blur {
+		canvas.Use(0, 0, "#ICON", fmt.Sprintf("style=\"filter: url(#BLUR); fill: %s\"", i.color), transform)
 	}
 	canvas.Use(0, 0, "#ICON", style, transform)
 	canvas.End()

@@ -184,7 +184,7 @@ func main() {
 	// fixed assets
 	imPrecip, _ = cacheImage(`brolly`, imPrecip, 0.00, ``)
 	imHumid, _ = cacheImage(`humidity`, imHumid, 0.00, ``)
-	//imSnow, _ = cacheImage(`snowflake`, imSnow, 0.00,``)
+
 	togweather := false
 
 	// concurrent updates
@@ -316,12 +316,18 @@ func main() {
 			dc.SetHexColor("#000000")
 			dc.Clear()
 
-			// first of the month - rabbit-rabbit-rabbit
-			var imBunny iconCache
-			imBunny, _ = cacheImage(`bunny`, imBunny, 0.0, ``)
-			dc.DrawImageAnchored(imBunny.image, 14, H-13, 0.5, 0.5)
-			dc.DrawImageAnchored(imaging.FlipH(imBunny.image), W-14, H-13, 0.5, 0.5)
+			cornerScroll(dc, `corner-scroll`, 0.9, `#ffcc0008`, false)
+			cornerScroll(dc, `alt-corner-scroll`, 0.0, `#d4af3708`, true)
 
+			// keep it crisp, fold scroll under face
+			dc.DrawCircle(cx, cy, r+1)
+			dc.Fill()
+
+			var imGlobal iconCache
+			//imGlobal, _ = cacheImage(`globalz`, imGlobal, 0.666, ``)
+			//dc.DrawImageAnchored(imGlobal.image, 0, 0, 0, 0)
+			imGlobal, _ = cacheImage(`global`, imGlobal, 0.666, ``)
+			dc.DrawImageAnchored(imGlobal.image, 0, 0, 0, 0)
 			dc.SetFillStyle(grad)
 			dc.DrawCircle(cx, cy, r+1)
 			dc.Fill()
@@ -340,6 +346,7 @@ func main() {
 				dc.Stroke()
 
 			}
+
 			// cache the clock face - zero struggles
 			icache = imaging.New(clockw, clockh, color.NRGBA{0, 0, 0, 0})
 			icache = imaging.Paste(icache, dc.Image(), image.Pt(0, 0))
@@ -656,4 +663,18 @@ func drawHorizontalBar(dc *gg.Context, x, y, pcnt float64) {
 	dc.SetHexColor("#ff9900")
 	dc.DrawRectangle(x, y, l, 4)
 	dc.Stroke()
+}
+
+func cornerScroll(dc *gg.Context, iconName string, scale float64, color string, globe bool) {
+	var ic iconCache
+	ic, _ = cacheImage(iconName, ic, scale, color)
+	dc.DrawImageAnchored(ic.image, 0, -1, 0, 0)
+	dst := imaging.FlipH(ic.image)
+	lx := W - dst.Bounds().Max.X
+	ly := H - dst.Bounds().Max.Y + 1
+	dc.DrawImageAnchored(dst, lx, -1, 0, 0)
+	dst = imaging.FlipV(dst)
+	dc.DrawImageAnchored(dst, lx, ly, 0, 0)
+	dst = imaging.FlipH(dst)
+	dc.DrawImageAnchored(dst, 0, ly, 0, 0)
 }
