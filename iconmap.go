@@ -124,10 +124,12 @@ func mapInit() {
 		"The Ride":          icon{filename: "mbta-the-ride", color: "#52bbc5", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: false},
 		"Ferry":             icon{filename: "mbta-ferry", color: "#008eaa", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: false},
 		"corner-scroll":     icon{filename: "cscroll", color: "#0f344340", width: 60, height: 60, scale: 1.0, alpha: 0.25, shadow: false},
+		"volume-on":         icon{filename: "volume-on", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: true},
+		"volume-mute":       icon{filename: "volume-mute", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: true},
 		"alt-corner-scroll": icon{filename: "cscroll2", color: "#0f344340", width: 60, height: 60, scale: 1.0, alpha: 0.35, shadow: false},
-		"globalz":           icon{filename: "globalz", color: "#fffffcc", width: 192, height: 192, scale: 1, alpha: 0.025, shadow: true, blur: true},
-		"global":            icon{filename: "global", color: "#fffffcc", width: 192, height: 192, scale: 1, alpha: 0.025, shadow: true, blur: true},
-		"skullz":            icon{filename: "arggggh", color: "#6D97ABcc", width: 100, height: 100, scale: 1, alpha: 0.5, shadow: true},
+		"globalz":           icon{filename: "globalz", color: "#fffffcc", width: 192, height: 192, scale: 1.0, alpha: 0.025, shadow: true, blur: true},
+		"global":            icon{filename: "global", color: "#fffffcc", width: 192, height: 192, scale: 1.0, alpha: 0.025, shadow: true, blur: true},
+		"skullz":            icon{filename: "arggggh", color: "#6D97ABcc", width: 100, height: 100, scale: 1.0, alpha: 0.5, shadow: true},
 		"bunny":             icon{filename: "first-bunny", color: "#0f344340", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: true},
 	}
 	iconMap = im

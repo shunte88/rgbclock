@@ -21,7 +21,7 @@ RGB:
   layout: full
   daybright: 30
   nightbright: 30
-  showbright: rue
+  showbright: false
   colorgrad1: "45a24740"
   colorgrad2: "0f344340"
 transport:
@@ -92,6 +92,6 @@ news:
   detail: true
   active: true
   window: 
-    time: 00:40
+    time: 00:45
     duration: 4
     repeat: 60

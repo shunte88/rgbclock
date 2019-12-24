@@ -269,14 +269,8 @@ func main() {
 		DPI:  72,
 	})
 
-	lms.Player.Albumartist.SetMaxlen(scroll)
-	lms.Player.Albumartist.SetFace(xlmsface, "#ff9900c0")
-	lms.Player.Album.SetMaxlen(scroll)
-	lms.Player.Album.SetFace(xlmsface, "#ff9900c0")
-	lms.Player.Title.SetMaxlen(scroll)
-	lms.Player.Title.SetFace(xlmsface, "#ff9900c0")
-	lms.Player.Artist.SetMaxlen(scroll)
-	lms.Player.Artist.SetFace(xlmsface, "#ff9900c0")
+	lms.SetMaxLen(scroll)
+	lms.SetFace(xlmsface, "#ff9900c0")
 
 	lastBrightness := brightness
 	var icache draw.Image
@@ -294,10 +288,9 @@ func main() {
 
 	defer newsStop()
 
-	//pic := 0 //debug
-
 	angle := 0.20
 	inca := angle
+	dump := 501
 
 	for {
 
@@ -324,8 +317,6 @@ func main() {
 			dc.Fill()
 
 			var imGlobal iconCache
-			//imGlobal, _ = cacheImage(`globalz`, imGlobal, 0.666, ``)
-			//dc.DrawImageAnchored(imGlobal.image, 0, 0, 0, 0)
 			imGlobal, _ = cacheImage(`global`, imGlobal, 0.666, ``)
 			dc.DrawImageAnchored(imGlobal.image, 0, 0, 0, 0)
 			dc.SetFillStyle(grad)
@@ -480,6 +471,8 @@ func main() {
 			pos += 9
 			dc.DrawImageAnchored(lms.Player.Artist.Image(), int(W/2), pos, 0.5, 0.5)
 			dc.DrawStringAnchored(fmt.Sprintf("• %v •", lms.Player.Year), float64(W/2), float64(cy+44), 0.5, 0.5)
+			pos += 9
+			dc.DrawImageAnchored(lms.Volume(), W-31, pos, 0, 0.5)
 
 			placeBorderZone(dc, lmsface, lw, 68, 50)
 			drawHorizontalBar(dc, 10, 115, lms.Player.Percent)
@@ -501,33 +494,31 @@ func main() {
 			}
 			dc.SetHexColor("#0099ffcc")
 			dc.DrawStringAnchored(lms.Player.Bitty, float64(W/2), base, 0.5, 0.5)
+		} else if transit.Display {
+			pinClockTop(dc)
+			placeWeatherDetail(dc, hf/2, dptface)
+			// active transit here - top 3
+			noData := true
+			pos := int(cy + 16)
+			for pred := range transit.Predictions() {
+				dc.DrawImageAnchored(pred, int(W/2), pos, 0.5, 0.5)
+				pos += 16
+				noData = false
+			}
+			if noData {
+				dc.SetHexColor("#ff9900cc")
+				dc.SetFontFace(sface)
+				dc.DrawStringAnchored(`WAITING`, float64(W/2), float64(pos+3), 0.5, 0.5)
+				dc.DrawStringAnchored(`FOR MBTA`, float64(W/2), float64(pos+19), 0.5, 0.5)
+			}
+			placeBorderZone(dc, lmsface, lw, 60, 55)
 		} else {
-			if transit.Display {
+			if news.Display() {
 				pinClockTop(dc)
 				placeWeatherDetail(dc, hf/2, dptface)
-				// active transit here - top 3
-				noData := true
-				pos := int(cy + 16)
-				for pred := range transit.Predictions() {
-					dc.DrawImageAnchored(pred, int(W/2), pos, 0.5, 0.5)
-					pos += 16
-					noData = false
-				}
-				if noData {
-					dc.SetHexColor("#ff9900cc")
-					dc.SetFontFace(sface)
-					dc.DrawStringAnchored(`WAITING`, float64(W/2), float64(pos+3), 0.5, 0.5)
-					dc.DrawStringAnchored(`FOR MBTA`, float64(W/2), float64(pos+19), 0.5, 0.5)
-				}
-				placeBorderZone(dc, lmsface, lw, 60, 55)
-			} else {
-				if news.Display() {
-					pinClockTop(dc)
-					placeWeatherDetail(dc, hf/2, dptface)
-					pos := int(cy + 2)
-					dc.DrawImageAnchored(news.Image(), 1, pos, 0, 0)
-					placeBorderZone(dc, lmsface, lw, 60, 59)
-				}
+				pos := int(cy + 2)
+				dc.DrawImageAnchored(news.Image(), 1, pos, 0, 0)
+				placeBorderZone(dc, lmsface, lw, 60, 59)
 			}
 		}
 		dc.SetLineWidth(lw)
@@ -540,8 +531,11 @@ func main() {
 				inca *= -1
 			}
 		}
-		//gg.SavePNG(fmt.Sprintf("rgbclock%010d.png", pic), imaging.Resize(dc.Image(), W*4, H*4, imaging.Lanczos))
-		//pic++
+
+		if dump < 500 {
+			go dumpImage(dump, dc.Image())
+			dump++
+		}
 
 		if folding {
 			itmp := imaging.Rotate180(dc.Image())
@@ -651,13 +645,14 @@ func rotator() {
 }
 
 func drawHorizontalBar(dc *gg.Context, x, y, pcnt float64) {
-	dc.SetLineWidth(1)
+	dc.SetLineWidth(0.4)
 	l := float64(W) - (2 * x)
 	lp := (l - 2.00) * (pcnt / 100.00)
 	dc.SetHexColor("#000000")
 	dc.DrawRectangle(x+1, y+1, l-2, 2)
 	dc.Fill()
 	dc.SetHexColor("#ff9900") // bar color
+	dc.SetLineWidth(1)
 	dc.DrawRectangle(x+1, y+1, lp, 2)
 	dc.Fill()
 	dc.SetHexColor("#ff9900")

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"image"
 	"image/color"
 	"image/draw"
 	"image/jpeg"
@@ -17,6 +18,9 @@ import (
 	"time"
 
 	"github.com/disintegration/imaging"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/basicfont"
+	"golang.org/x/image/math/fixed"
 )
 
 // LMSDetail provides current track detail and status
@@ -30,11 +34,7 @@ type LMSDetail struct {
 	PlayerConnected      int         `json:"player_connected"`
 	PlayerIP             string      `json:"player_ip"`
 	PlayerName           string      `json:"player_name"`
-	//PlaylistMode         string      `json:"playlist mode"`
-	//PlaylistRepeat       int         `json:"playlist repeat"`
-	//PlaylistShuffle      int         `json:"playlist shuffle"`
-	//PlaylistCurIndex     interface{} `json:"playlist_cur_index"`
-	PlaylistLoop []struct {
+	PlaylistLoop         []struct {
 		Album          string      `json:"album,omitempty"`
 		Artist         string      `json:"artist,omitempty"`
 		ArtworkURL     string      `json:"artwork_url"`
@@ -199,16 +199,20 @@ type LMSPlayer struct {
 
 // LMSServer limited to a single player for current usage
 type LMSServer struct {
-	id       int
-	host     string
-	port     int
-	web      string
-	url      string
-	arturl   string
-	coverart draw.Image
-	Player   *LMSPlayer
-	mux      sync.Mutex
-	update   chan bool
+	id         int
+	host       string
+	port       int
+	web        string
+	url        string
+	arturl     string
+	coverart   draw.Image
+	volume     draw.Image
+	Player     *LMSPlayer
+	mux        sync.Mutex
+	face       font.Face
+	fontHeight float64
+	color      color.Color
+	update     chan bool
 }
 
 // NewLMSPlayer initiate an LMS player
@@ -314,6 +318,10 @@ func NewLMSServer(host string, port int, player string) *LMSServer {
 	ls.url = fmt.Sprintf("%s/jsonrpc.js", ls.web)
 	ls.web += `/`
 	ls.Player = NewLMSPlayer(player)
+	ls.volume = image.NewRGBA(image.Rect(0, 0, 32, 16))
+	ls.face = basicfont.Face7x13
+	ls.fontHeight = 13
+	ls.color = color.White
 	return ls
 }
 
@@ -399,6 +407,8 @@ func (ls *LMSServer) updatePlayer() {
 		}
 	}()
 
+	lastVol := ls.Player.Volume
+
 	ls.mux.Lock()
 	vs, err := ls.request(ls.Player.MAC, []string{"status", "-", "1", "tags:cgABbehldiqtyrSuoKLNJITC"})
 	if nil != vs && err == nil {
@@ -423,6 +433,10 @@ func (ls *LMSServer) updatePlayer() {
 				chkp := ls.Player.Title.GetText()
 
 				ls.Player.Volume = s.MixerVolume
+
+				if ls.Player.Volume != lastVol {
+					ls.setVolume()
+				}
 
 				if t, ok := s.Time.(float64); ok {
 					ls.Player.setTime(t)
@@ -514,6 +528,61 @@ func (ls *LMSServer) updatePlayer() {
 // Coverart returns the cover image cache
 func (ls *LMSServer) Coverart() draw.Image {
 	return ls.coverart
+}
+
+// Volume returns the volume glyph
+func (ls *LMSServer) Volume() draw.Image {
+	return ls.volume
+}
+
+// SetFace set font face and color
+func (ls *LMSServer) SetFace(f font.Face, x string) {
+	if ls.face != f {
+		ls.face = f
+		fmx := ls.face.Metrics()
+		//ls.yy = 2 + int(float64(fmx.Ascent>>6)-float64(fmx.Descent>>6))
+		ls.fontHeight = float64((fmx.Height >> 6) + 2)
+	}
+	ls.color = parseHexColor(x)
+	ls.Player.Albumartist.SetFace(f, x)
+	ls.Player.Album.SetFace(f, x)
+	ls.Player.Title.SetFace(f, x)
+	ls.Player.Artist.SetFace(f, x)
+}
+
+// SetMaxLen set scroll limits
+func (ls *LMSServer) SetMaxLen(m int) {
+	ls.Player.Albumartist.SetMaxlen(m)
+	ls.Player.Album.SetMaxlen(m)
+	ls.Player.Title.SetMaxlen(m)
+	ls.Player.Artist.SetMaxlen(m)
+}
+
+func (ls *LMSServer) setVolume() {
+
+	var ticon iconCache
+	if 0 == ls.Player.Volume {
+		ticon, _ = cacheImage(`volume-mute`, ticon, 0.0, `red`)
+	} else {
+		ticon, _ = cacheImage(`volume-on`, ticon, 0.0, ``)
+	}
+	canvas := image.NewRGBA(image.Rect(0, 0, 32, 16))
+
+	dst := imaging.Resize(ticon.image, 11, 11, imaging.Lanczos)
+	draw.Draw(canvas, canvas.Bounds(), dst, image.Pt(-19, -1), draw.Src)
+
+	t := fmt.Sprintf("%d%%", ls.Player.Volume)
+
+	point := fixed.Point26_6{fixed.Int26_6(64), fixed.Int26_6(9 * 64)}
+
+	d := &font.Drawer{
+		Dst:  canvas,
+		Src:  image.NewUniform(ls.color),
+		Face: ls.face,
+		Dot:  point,
+	}
+	d.DrawString(t)
+	draw.Draw(ls.volume, ls.volume.Bounds(), canvas, image.ZP, draw.Src)
 }
 
 func (ls *LMSServer) cacheImage() {
