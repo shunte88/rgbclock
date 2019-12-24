@@ -472,6 +472,7 @@ func main() {
 			dc.DrawImageAnchored(lms.Player.Artist.Image(), int(W/2), pos, 0.5, 0.5)
 			dc.DrawStringAnchored(fmt.Sprintf("• %v •", lms.Player.Year), float64(W/2), float64(cy+44), 0.5, 0.5)
 			pos += 9
+			dc.DrawImageAnchored(lms.PlayModifiers(), 3, pos, 0, 0.5)
 			dc.DrawImageAnchored(lms.Volume(), W-31, pos, 0, 0.5)
 
 			placeBorderZone(dc, lmsface, lw, 68, 50)

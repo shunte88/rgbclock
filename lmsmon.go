@@ -34,6 +34,8 @@ type LMSDetail struct {
 	PlayerConnected      int         `json:"player_connected"`
 	PlayerIP             string      `json:"player_ip"`
 	PlayerName           string      `json:"player_name"`
+	PlaylistRepeat       int         `json:"playlist repeat"`
+	PlaylistShuffle      int         `json:"playlist shuffle"`
 	PlaylistLoop         []struct {
 		Album          string      `json:"album,omitempty"`
 		Artist         string      `json:"artist,omitempty"`
@@ -190,29 +192,35 @@ type LMSPlayer struct {
 	remote      bool
 	arturl      string
 	coverart    draw.Image
+	repeat      int
+	shuffle     int
 	Bitrate     string
 	Samplesize  float64
 	Samplerate  float64
 	Volume      int
 	Year        string
+	lastVol     int
+	lastRepeat  int
+	lastShuffle int
 }
 
 // LMSServer limited to a single player for current usage
 type LMSServer struct {
-	id         int
-	host       string
-	port       int
-	web        string
-	url        string
-	arturl     string
-	coverart   draw.Image
-	volume     draw.Image
-	Player     *LMSPlayer
-	mux        sync.Mutex
-	face       font.Face
-	fontHeight float64
-	color      color.Color
-	update     chan bool
+	id            int
+	host          string
+	port          int
+	web           string
+	url           string
+	arturl        string
+	coverart      draw.Image
+	volume        draw.Image
+	playmodifiers draw.Image
+	Player        *LMSPlayer
+	mux           sync.Mutex
+	face          font.Face
+	fontHeight    float64
+	color         color.Color
+	update        chan bool
 }
 
 // NewLMSPlayer initiate an LMS player
@@ -243,8 +251,13 @@ func NewLMSPlayer(player string) *LMSPlayer {
 		RemStr:      `00:00`,
 		Percent:     0,
 		remote:      false,
+		repeat:      0,
+		shuffle:     0,
 		Volume:      0,
 		Year:        `0`,
+		lastVol:     -1,
+		lastRepeat:  -1,
+		lastShuffle: -1,
 	}
 }
 
@@ -319,6 +332,7 @@ func NewLMSServer(host string, port int, player string) *LMSServer {
 	ls.web += `/`
 	ls.Player = NewLMSPlayer(player)
 	ls.volume = image.NewRGBA(image.Rect(0, 0, 32, 16))
+	ls.playmodifiers = image.NewRGBA(image.Rect(0, 0, 32, 16))
 	ls.face = basicfont.Face7x13
 	ls.fontHeight = 13
 	ls.color = color.White
@@ -407,8 +421,6 @@ func (ls *LMSServer) updatePlayer() {
 		}
 	}()
 
-	lastVol := ls.Player.Volume
-
 	ls.mux.Lock()
 	vs, err := ls.request(ls.Player.MAC, []string{"status", "-", "1", "tags:cgABbehldiqtyrSuoKLNJITC"})
 	if nil != vs && err == nil {
@@ -434,7 +446,7 @@ func (ls *LMSServer) updatePlayer() {
 
 				ls.Player.Volume = s.MixerVolume
 
-				if ls.Player.Volume != lastVol {
+				if ls.Player.Volume != ls.Player.lastVol {
 					ls.setVolume()
 				}
 
@@ -444,6 +456,18 @@ func (ls *LMSServer) updatePlayer() {
 				if d, ok := s.Duration.(float64); ok {
 					ls.Player.setDuration(d)
 				}
+
+				ls.Player.repeat = s.PlaylistRepeat
+				ls.Player.shuffle = s.PlaylistShuffle
+
+				if ls.Player.lastRepeat != ls.Player.repeat ||
+					ls.Player.lastShuffle != ls.Player.shuffle {
+					ls.setPlayModifiers()
+				}
+
+				ls.Player.lastVol = ls.Player.Volume
+				ls.Player.lastRepeat = ls.Player.repeat
+				ls.Player.lastShuffle = ls.Player.shuffle
 
 				// remote
 				ls.Player.remote = (1 == s.Remote)
@@ -535,6 +559,11 @@ func (ls *LMSServer) Volume() draw.Image {
 	return ls.volume
 }
 
+// PlayModifiers returns the playlist modifier glyph(s)
+func (ls *LMSServer) PlayModifiers() draw.Image {
+	return ls.playmodifiers
+}
+
 // SetFace set font face and color
 func (ls *LMSServer) SetFace(f font.Face, x string) {
 	if ls.face != f {
@@ -548,6 +577,8 @@ func (ls *LMSServer) SetFace(f font.Face, x string) {
 	ls.Player.Album.SetFace(f, x)
 	ls.Player.Title.SetFace(f, x)
 	ls.Player.Artist.SetFace(f, x)
+	ls.Player.Composer.SetFace(f, x)
+	ls.Player.Conductor.SetFace(f, x)
 }
 
 // SetMaxLen set scroll limits
@@ -556,6 +587,8 @@ func (ls *LMSServer) SetMaxLen(m int) {
 	ls.Player.Album.SetMaxlen(m)
 	ls.Player.Title.SetMaxlen(m)
 	ls.Player.Artist.SetMaxlen(m)
+	ls.Player.Composer.SetMaxlen(m)
+	ls.Player.Conductor.SetMaxlen(m)
 }
 
 func (ls *LMSServer) setVolume() {
@@ -583,6 +616,26 @@ func (ls *LMSServer) setVolume() {
 	}
 	d.DrawString(t)
 	draw.Draw(ls.volume, ls.volume.Bounds(), canvas, image.ZP, draw.Src)
+}
+
+func (ls *LMSServer) setPlayModifiers() {
+
+	canvas := image.NewRGBA(image.Rect(0, 0, 32, 16))
+
+	size := 13
+	var ticon iconCache
+	if 0 != ls.Player.repeat {
+		ticon, _ = cacheImage(fmt.Sprintf("repeat-%d", ls.Player.repeat), ticon, 0.0, ``)
+		dst := imaging.Resize(ticon.image, size, size, imaging.Lanczos)
+		draw.Draw(canvas, canvas.Bounds(), dst, image.ZP, draw.Src)
+	}
+	if 0 != ls.Player.shuffle {
+		ticon, _ = cacheImage(fmt.Sprintf("shuffle-%d", ls.Player.shuffle), ticon, 0.0, ``)
+		dst := imaging.Resize(ticon.image, size, size, imaging.Lanczos)
+		draw.Draw(canvas, canvas.Bounds(), dst, image.Pt(-14, 0), draw.Src)
+	}
+
+	draw.Draw(ls.playmodifiers, ls.playmodifiers.Bounds(), canvas, image.ZP, draw.Src)
 }
 
 func (ls *LMSServer) cacheImage() {
