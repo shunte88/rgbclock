@@ -25,6 +25,7 @@ import (
 )
 
 var idx = []int{0, 1, 2, 3}
+var capture = false
 
 func init() {
 
@@ -41,14 +42,14 @@ func init() {
 
 	fontfile = viper.GetString("RGB.fontfile")
 	fontfile2 = viper.GetString("RGB.fontfile2")
-	W = viper.GetInt("RGB.width")
-	H = viper.GetInt("RGB.height")
+
+	layout = viper.GetString("RGB.layout")
+	W = viper.GetInt(layout + ".width")
+	H = viper.GetInt(layout + ".height")
+
 	rows = viper.GetInt("RGB.rows")
 	cols = viper.GetInt("RGB.cols")
 	folding = viper.GetBool("RGB.folding")
-
-	parallel = viper.GetInt("RGB.parallel")
-	chain = viper.GetInt("RGB.chain")
 
 	daybright = viper.GetInt("RGB.daybright")
 	if daybright < 0 || daybright > 100 {
@@ -59,7 +60,6 @@ func init() {
 		nightbright = daybright
 	}
 
-	layout = viper.GetString("RGB.layout")
 	scroll = viper.GetInt("RGB.scroll_limit")
 	hardware = viper.GetString("RGB.hardware")
 	showbright = viper.GetBool("RGB.showbright")
@@ -69,6 +69,8 @@ func init() {
 	colorgrad2 = viper.GetString("RGB.colorgrad2")
 
 	detail = viper.GetBool(layout + ".detail")
+	parallel = viper.GetInt(layout + ".parallel")
+	chain = viper.GetInt(layout + ".chain")
 	clockw = viper.GetInt(layout + ".clock.width")
 	clockh = viper.GetInt(layout + ".clock.height")
 
@@ -135,6 +137,8 @@ func init() {
 		if nightbright < 0 || nightbright > 100 {
 			nightbright = daybright
 		}
+
+		capture = viper.GetBool("capture")
 
 		showbright = viper.GetBool("RGB.showbright")
 		experiment = viper.GetBool("RGB.experiment")
@@ -290,7 +294,7 @@ func main() {
 
 	angle := 0.20
 	inca := angle
-	dump := 501
+	dump := 0
 
 	for {
 
@@ -472,8 +476,8 @@ func main() {
 			dc.DrawImageAnchored(lms.Player.Artist.Image(), int(W/2), pos, 0.5, 0.5)
 			dc.DrawStringAnchored(fmt.Sprintf("• %v •", lms.Player.Year), float64(W/2), float64(cy+44), 0.5, 0.5)
 			pos += 9
-			dc.DrawImageAnchored(lms.PlayModifiers(), 3, pos, 0, 0.5)
-			dc.DrawImageAnchored(lms.Volume(), W-31, pos, 0, 0.5)
+			dc.DrawImageAnchored(lms.PlayModifiers(), 1, pos, 0, 0.5)
+			dc.DrawImageAnchored(lms.Volume(), W-25, pos, 0, 0.5)
 
 			placeBorderZone(dc, lmsface, lw, 68, 50)
 			drawHorizontalBar(dc, 10, 115, lms.Player.Percent)
@@ -533,7 +537,7 @@ func main() {
 			}
 		}
 
-		if dump < 500 {
+		if capture && dump < 500 {
 			go dumpImage(dump, dc.Image())
 			dump++
 		}

@@ -1,3 +1,4 @@
+capture: false
 LMS:
   active: true
   IP: "192.168.1.25"
@@ -13,10 +14,6 @@ RGB:
   experiment: false
   rows: 64
   cols: 64
-  parallel: 1
-  chain: 4
-  width: 128
-  height: 128
   hardware: adafruit-hat-pwm
   layout: full
   daybright: 30
@@ -38,10 +35,14 @@ transport:
       - 4
       - 5
     from: "04:50 AM"
-    until: "07:30 AM"
+    until: "06:30 AM"
     window: 30
 simple:
   style: 'style="fill: %s" fill-opacity="1.0" stroke-opacity="0.4" stroke="black" stroke-width="1"'
+  parallel: 1
+  chain: 2
+  width: 128
+  height: 64
   detail: true
   clock:
     width: 64
@@ -58,6 +59,10 @@ simple:
 full:
   style: 'style="fill: %s" fill-opacity="1.0" stroke-opacity="0.4" stroke="midnightblue" stroke-width="2"'
   detail: false
+  parallel: 1
+  chain: 4
+  width: 128
+  height: 128
   clock:
     width: 128
     height: 128
@@ -70,6 +75,25 @@ full:
       alpha: 0.95
       width: 48
       scale: 1.3
+jumbo:
+  style: 'style="fill: %s" fill-opacity="1.0" stroke-opacity="0.4" stroke="midnightblue" stroke-width="3"'
+  detail: false
+  parallel: 1
+  chain: 9
+  width: 192
+  height: 192
+  clock:
+    width: 192
+    height: 192
+  icon:
+    main:
+      alpha: 0.60
+      width: 81
+      scale: 2.70
+    wind:
+      alpha: 0.95
+      width: 72
+      scale: 1.95
 feeds:
   -
     title: "BBC News UK"

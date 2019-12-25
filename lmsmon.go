@@ -331,8 +331,8 @@ func NewLMSServer(host string, port int, player string) *LMSServer {
 	ls.url = fmt.Sprintf("%s/jsonrpc.js", ls.web)
 	ls.web += `/`
 	ls.Player = NewLMSPlayer(player)
-	ls.volume = image.NewRGBA(image.Rect(0, 0, 32, 16))
-	ls.playmodifiers = image.NewRGBA(image.Rect(0, 0, 32, 16))
+	ls.volume = image.NewRGBA(image.Rect(0, 0, 24, 16))
+	ls.playmodifiers = image.NewRGBA(image.Rect(0, 0, 28, 16))
 	ls.face = basicfont.Face7x13
 	ls.fontHeight = 13
 	ls.color = color.White
@@ -597,42 +597,53 @@ func (ls *LMSServer) setVolume() {
 	if 0 == ls.Player.Volume {
 		ticon, _ = cacheImage(`volume-mute`, ticon, 0.0, `red`)
 	} else {
-		ticon, _ = cacheImage(`volume-on`, ticon, 0.0, ``)
+		for i := 0; i < 5; i++ {
+			if ls.Player.Volume <= ((i + 1) * 20) {
+				ticon, _ = cacheImage(fmt.Sprintf("volume-%d", i), ticon, 0.0, ``)
+				break
+			}
+		}
 	}
-	canvas := image.NewRGBA(image.Rect(0, 0, 32, 16))
+	canvas := image.NewRGBA(image.Rect(0, 0, 24, 16))
 
-	dst := imaging.Resize(ticon.image, 11, 11, imaging.Lanczos)
-	draw.Draw(canvas, canvas.Bounds(), dst, image.Pt(-19, -1), draw.Src)
+	size := 13
+	dst := imaging.Resize(ticon.image, size, size, imaging.Lanczos)
+	cb := canvas.Bounds()
+	cb.Min.X = (cb.Max.X - size - 1)
+	draw.Draw(canvas, cb, dst, image.ZP, draw.Src)
 
-	t := fmt.Sprintf("%d%%", ls.Player.Volume)
-
-	point := fixed.Point26_6{fixed.Int26_6(64), fixed.Int26_6(9 * 64)}
-
+	t := fmt.Sprintf("%d", ls.Player.Volume)
 	d := &font.Drawer{
 		Dst:  canvas,
 		Src:  image.NewUniform(ls.color),
 		Face: ls.face,
-		Dot:  point,
 	}
+	adv := d.MeasureString(t)
+	fw := float64(cb.Min.X-1) - float64(adv>>6) // right justify
+	d.Dot = fixed.Point26_6{fixed.Int26_6(fw * 64), fixed.Int26_6(9 * 64)}
 	d.DrawString(t)
+
 	draw.Draw(ls.volume, ls.volume.Bounds(), canvas, image.ZP, draw.Src)
 }
 
 func (ls *LMSServer) setPlayModifiers() {
 
-	canvas := image.NewRGBA(image.Rect(0, 0, 32, 16))
+	canvas := image.NewRGBA(image.Rect(0, 0, 28, 16))
 
 	size := 13
 	var ticon iconCache
+	cb := canvas.Bounds()
+	cb.Min.X = 2
 	if 0 != ls.Player.repeat {
 		ticon, _ = cacheImage(fmt.Sprintf("repeat-%d", ls.Player.repeat), ticon, 0.0, ``)
 		dst := imaging.Resize(ticon.image, size, size, imaging.Lanczos)
-		draw.Draw(canvas, canvas.Bounds(), dst, image.ZP, draw.Src)
+		draw.Draw(canvas, cb, dst, image.ZP, draw.Src)
 	}
+	cb.Min.X += size + 2
 	if 0 != ls.Player.shuffle {
 		ticon, _ = cacheImage(fmt.Sprintf("shuffle-%d", ls.Player.shuffle), ticon, 0.0, ``)
 		dst := imaging.Resize(ticon.image, size, size, imaging.Lanczos)
-		draw.Draw(canvas, canvas.Bounds(), dst, image.Pt(-14, 0), draw.Src)
+		draw.Draw(canvas, cb, dst, image.ZP, draw.Src)
 	}
 
 	draw.Draw(ls.playmodifiers, ls.playmodifiers.Bounds(), canvas, image.ZP, draw.Src)
