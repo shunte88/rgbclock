@@ -569,7 +569,6 @@ func (ls *LMSServer) SetFace(f font.Face, x string) {
 	if ls.face != f {
 		ls.face = f
 		fmx := ls.face.Metrics()
-		//ls.yy = 2 + int(float64(fmx.Ascent>>6)-float64(fmx.Descent>>6))
 		ls.fontHeight = float64((fmx.Height >> 6) + 2)
 	}
 	ls.color = parseHexColor(x)
@@ -595,7 +594,7 @@ func (ls *LMSServer) setVolume() {
 
 	var ticon iconCache
 	if 0 == ls.Player.Volume {
-		ticon, _ = cacheImage(`volume-mute`, ticon, 0.0, `red`)
+		ticon, _ = cacheImage(`volume-mute`, ticon, 0.0, ``)
 	} else {
 		for i := 0; i < 5; i++ {
 			if ls.Player.Volume <= ((i + 1) * 20) {
@@ -604,33 +603,40 @@ func (ls *LMSServer) setVolume() {
 			}
 		}
 	}
-	canvas := image.NewRGBA(image.Rect(0, 0, 24, 16))
-
-	size := 13
+	wc := int(3.5 * ls.fontHeight)
+	hc := int(1.5*ls.fontHeight) + 2
+	canvas := image.NewRGBA(image.Rect(0, 0, wc, hc))
+	size := hc - 5
 	dst := imaging.Resize(ticon.image, size, size, imaging.Lanczos)
 	cb := canvas.Bounds()
-	cb.Min.X = (cb.Max.X - size - 1)
+	cb.Min.X = int(float64(cb.Max.X) * .333)
+
 	draw.Draw(canvas, cb, dst, image.ZP, draw.Src)
 
-	t := fmt.Sprintf("%d", ls.Player.Volume)
-	d := &font.Drawer{
-		Dst:  canvas,
-		Src:  image.NewUniform(ls.color),
-		Face: ls.face,
+	if 0 != ls.Player.Volume {
+		t := fmt.Sprintf("%d", ls.Player.Volume)
+		d := &font.Drawer{
+			Dst:  canvas,
+			Src:  image.NewUniform(ls.color),
+			Face: ls.face,
+		}
+		adv := d.MeasureString(t)
+		fw := float64(cb.Min.X-1) - float64(adv>>6) // right justify
+		d.Dot = fixed.Point26_6{fixed.Int26_6(fw * 64), fixed.Int26_6(9 * 64)}
+		d.DrawString(t)
 	}
-	adv := d.MeasureString(t)
-	fw := float64(cb.Min.X-1) - float64(adv>>6) // right justify
-	d.Dot = fixed.Point26_6{fixed.Int26_6(fw * 64), fixed.Int26_6(9 * 64)}
-	d.DrawString(t)
 
 	draw.Draw(ls.volume, ls.volume.Bounds(), canvas, image.ZP, draw.Src)
+
 }
 
 func (ls *LMSServer) setPlayModifiers() {
 
-	canvas := image.NewRGBA(image.Rect(0, 0, 28, 16))
+	wc := int(3 * ls.fontHeight)
+	hc := int(1.5*ls.fontHeight) + 2
+	canvas := image.NewRGBA(image.Rect(0, 0, wc, hc))
+	size := hc - 4
 
-	size := 13
 	var ticon iconCache
 	cb := canvas.Bounds()
 	cb.Min.X = 2
@@ -639,7 +645,7 @@ func (ls *LMSServer) setPlayModifiers() {
 		dst := imaging.Resize(ticon.image, size, size, imaging.Lanczos)
 		draw.Draw(canvas, cb, dst, image.ZP, draw.Src)
 	}
-	cb.Min.X += size + 2
+	cb.Min.X += size
 	if 0 != ls.Player.shuffle {
 		ticon, _ = cacheImage(fmt.Sprintf("shuffle-%d", ls.Player.shuffle), ticon, 0.0, ``)
 		dst := imaging.Resize(ticon.image, size, size, imaging.Lanczos)

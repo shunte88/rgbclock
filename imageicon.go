@@ -16,37 +16,47 @@ import (
 
 func getImageIcon(i icon) (img draw.Image, err error) {
 
-	var s SVG
-
-	var iconMem = new(bytes.Buffer)
-	var canvas = svg.New(iconMem)
-
 	f, err := os.Open(iconFile(i))
 	if err != nil {
 		return img, err
 	}
 	defer f.Close()
 
-	if err = xml.NewDecoder(f).Decode(&s); err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to parse (%v)\n", err)
-		return img, err
-	}
-	canvas.Start(i.width, i.height)
-	style := fmt.Sprintf(iconStyle, i.color)
-	transform := ""
-	if i.rotate+i.scale > 0.0 {
-		if 0.00 != i.scale {
-			transform += fmt.Sprintf("scale(%[1]f %[1]f)", i.scale)
+	var iconMem = new(bytes.Buffer)
+
+	if i.asis {
+
+		iconMem.ReadFrom(f)
+
+	} else {
+
+		var s SVG
+
+		var canvas = svg.New(iconMem)
+
+		if err = xml.NewDecoder(f).Decode(&s); err != nil {
+			fmt.Fprintf(os.Stderr, "Unable to parse (%v)\n", err)
+			return img, err
 		}
-		if 0.00 != i.rotate {
-			transform += fmt.Sprintf("rotate(%[1]f %[2]v %[2]v)", i.rotate, 15)
+		canvas.Start(i.width, i.height)
+		style := fmt.Sprintf(iconStyle, i.color)
+		transform := ``
+		if i.rotate+i.scale > 0.0 {
+			if 0.00 != i.scale {
+				transform += fmt.Sprintf("scale(%[1]f %[1]f)", i.scale)
+			}
+			if 0.00 != i.rotate {
+				transform += fmt.Sprintf("rotate(%[1]f %[2]v %[2]v)", i.rotate, 15)
+			}
+			transform = fmt.Sprintf(`transform="%v"`, transform)
 		}
-		transform = fmt.Sprintf(`transform="%v"`, transform)
+		canvas.Group(transform, style)
+		io.WriteString(canvas.Writer, s.Doc)
+		canvas.Gend()
+		canvas.End()
+
 	}
-	canvas.Group(transform, style)
-	io.WriteString(canvas.Writer, s.Doc)
-	canvas.Gend()
-	canvas.End()
+
 	iconI, err := oksvg.ReadIconStream(iconMem)
 	if err != nil {
 		return img, err

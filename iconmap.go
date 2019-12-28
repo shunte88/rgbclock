@@ -14,6 +14,7 @@ type SVG struct {
 
 type icon struct {
 	filename string
+	asis     bool
 	color    string
 	scale    float64
 	rotate   float64
@@ -124,17 +125,17 @@ func mapInit() {
 		"The Ride":          icon{filename: "mbta-the-ride", color: "#52bbc5", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: false},
 		"Ferry":             icon{filename: "mbta-ferry", color: "#008eaa", width: 30, height: 30, scale: 1.0, alpha: 1, shadow: false},
 		"corner-scroll":     icon{filename: "cscroll", color: "#0f344340", width: 60, height: 60, scale: 1.0, alpha: 0.25, shadow: false},
-		"volume-on":         icon{filename: "volume-on", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: true},
-		"volume-0":          icon{filename: "volume-0", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: true},
-		"volume-1":          icon{filename: "volume-1", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: true},
-		"volume-2":          icon{filename: "volume-2", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: true},
-		"volume-3":          icon{filename: "volume-3", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: true},
-		"volume-4":          icon{filename: "volume-4", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: true},
-		"volume-mute":       icon{filename: "volume-mute", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: true},
-		"repeat-1":          icon{filename: "repeat-one", color: "#ff9900", width: 50, height: 50, scale: 1.0, alpha: .90, shadow: true},
-		"repeat-2":          icon{filename: "repeat-all", color: "#ff9900", width: 50, height: 50, scale: 1.0, alpha: .90, shadow: true},
-		"shuffle-1":         icon{filename: "shuffle-song", color: "#ff9900", width: 50, height: 50, scale: 1.0, alpha: .90, shadow: true},
-		"shuffle-2":         icon{filename: "shuffle-album", color: "#ff9900", width: 50, height: 50, scale: 1.0, alpha: .90, shadow: true},
+		"volume-on":         icon{filename: "volume-on", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: false},
+		"volume-0":          icon{filename: "volume-0", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: false},
+		"volume-1":          icon{filename: "volume-1", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: false},
+		"volume-2":          icon{filename: "volume-2", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: false},
+		"volume-3":          icon{filename: "volume-3", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: false},
+		"volume-4":          icon{filename: "volume-4", color: "#ff9900", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: false},
+		"volume-mute":       icon{filename: "volume-mute", color: "orangered", width: 60, height: 60, scale: 1.0, alpha: .90, shadow: false},
+		"repeat-1":          icon{filename: "repeat-one", color: "#ff9900", width: 50, height: 50, scale: 1.0, alpha: .90, shadow: false},
+		"repeat-2":          icon{filename: "repeat-all", color: "#ff9900", width: 50, height: 50, scale: 1.0, alpha: .90, shadow: false},
+		"shuffle-1":         icon{filename: "shuffle-song", color: "#ff9900", width: 50, height: 50, scale: 1.0, alpha: .90, shadow: false},
+		"shuffle-2":         icon{filename: "shuffle-album", color: "#ff9900", width: 50, height: 50, scale: 1.0, alpha: .90, shadow: false},
 		"alt-corner-scroll": icon{filename: "cscroll2", color: "#0f344340", width: 60, height: 60, scale: 1.0, alpha: 0.35, shadow: false},
 		"globalz":           icon{filename: "globalz", color: "#fffffcc", width: 192, height: 192, scale: 1.0, alpha: 0.025, shadow: true, blur: true},
 		"global":            icon{filename: "global", color: "#fffffcc", width: 192, height: 192, scale: 1.0, alpha: 0.025, shadow: true, blur: true},

@@ -477,25 +477,18 @@ func main() {
 			dc.DrawStringAnchored(fmt.Sprintf("• %v •", lms.Player.Year), float64(W/2), float64(cy+44), 0.5, 0.5)
 			pos += 9
 			dc.DrawImageAnchored(lms.PlayModifiers(), 1, pos, 0, 0.5)
-			dc.DrawImageAnchored(lms.Volume(), W-25, pos, 0, 0.5)
+			vol := lms.Volume()
+			dc.DrawImageAnchored(vol, W-(vol.Bounds().Max.X+2), pos, 0, 0.5)
 
 			placeBorderZone(dc, lmsface, lw, 68, 50)
 			drawHorizontalBar(dc, 10, 115, lms.Player.Percent)
 			base := float64(H - 9 + 4)
 			dc.SetHexColor("#ff9900")
-			dc.DrawStringAnchored(lms.Player.TimeStr, 16, base, 0.5, 0.5)
+			dc.DrawStringAnchored(lms.Player.TimeStr, 2, base, 0, 0.5)
 			if remaining {
-				if len(lms.Player.RemStr) == 8 {
-					dc.DrawStringAnchored(lms.Player.RemStr, float64(W-22), base, 0.5, 0.5)
-				} else {
-					dc.DrawStringAnchored(lms.Player.RemStr, float64(W-18), base, 0.5, 0.5)
-				}
+				dc.DrawStringAnchored(lms.Player.RemStr, float64(W-2), base, 1, 0.5)
 			} else {
-				if len(lms.Player.DurStr) == 8 {
-					dc.DrawStringAnchored(lms.Player.DurStr, float64(W-20), base, 0.5, 0.5)
-				} else {
-					dc.DrawStringAnchored(lms.Player.DurStr, float64(W-16), base, 0.5, 0.5)
-				}
+				dc.DrawStringAnchored(lms.Player.DurStr, float64(W-2), base, 1, 0.5)
 			}
 			dc.SetHexColor("#0099ffcc")
 			dc.DrawStringAnchored(lms.Player.Bitty, float64(W/2), base, 0.5, 0.5)
@@ -650,19 +643,19 @@ func rotator() {
 }
 
 func drawHorizontalBar(dc *gg.Context, x, y, pcnt float64) {
-	dc.SetLineWidth(0.4)
+	dc.SetLineWidth(0.3)
 	l := float64(W) - (2 * x)
 	lp := (l - 2.00) * (pcnt / 100.00)
 	dc.SetHexColor("#000000")
 	dc.DrawRectangle(x+1, y+1, l-2, 2)
 	dc.Fill()
 	dc.SetHexColor("#ff9900") // bar color
-	dc.SetLineWidth(1)
 	dc.DrawRectangle(x+1, y+1, lp, 2)
 	dc.Fill()
 	dc.SetHexColor("#ff9900")
 	dc.DrawRectangle(x, y, l, 4)
 	dc.Stroke()
+	dc.SetLineWidth(1)
 }
 
 func cornerScroll(dc *gg.Context, iconName string, scale float64, color string, globe bool) {

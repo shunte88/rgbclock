@@ -98,7 +98,6 @@ feeds:
   -
     title: "BBC News UK"
     link: "http://newsrss.bbc.co.uk/rss/newsonline_uk_edition/front_page/rss.xml"
-    # string flags only (yes/no)!
     active: yes
 #  -
 #    title: "CNN: U.S."
@@ -116,6 +115,6 @@ news:
   detail: true
   active: true
   window: 
-    time: 00:45
-    duration: 4
-    repeat: 60
+    time: 00:15
+    duration: 3
+    repeat: 30
