@@ -19,6 +19,7 @@ RGB:
   daybright: 30
   nightbright: 30
   showbright: false
+  instrument: false
   colorgrad1: "45a24740"
   colorgrad2: "0f344340"
 transport:

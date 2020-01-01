@@ -12,7 +12,7 @@ For the two panel mode a Pi Zero was capable but the 4 panel configuration needs
 
 Initial development was done with only two panels and this simpler mode is still available via configuration
 
-The initial build used python and SVG to paint the display.  As more features were added a rewrite in Go helped with performance.
+The initial build used python and SVG to paint the display.  As more features were added a rewrite in Go aided performance.
 
 Note the animation here is rather blocky, but the actual operation is buttery Rolex smooth
  
@@ -20,11 +20,13 @@ Note the animation here is rather blocky, but the actual operation is buttery Ro
 
 Weather data are obtained via the weathercache mechanism that is located in the scrollclock repo.  The weather icons come from the [Erik Flowers] SVG collection with some  programmatic modifications applied as they are rendered.
 
-The news feed is not fully functional as yet, skeleton code is in place but needs vertical scrolling to be implemented before its activated.
+The news feed provides updates at configured intervals.  Multiple feeds may be specified but they should be RSS compliant or the resukts are unpredictable.
 
-MBTA arrival predictions are now available.  Specify the required routes, stops and when the MBTA details should be displayed via configuration.
+Minimal performance metrics may also be displayed.
 
-And further home monitoring is to be added later, motion camera and ties to several Nest thermostats
+MBTA arrival predictions are available.  Specify the required routes, stops and when the MBTA details should be displayed via configuration.
+
+And further home monitoring is to be added later, motion camera and ties to several Nest thermostats once Google has released the new API
 
 Hopefully some or all of the code will find a use in your own projects
 

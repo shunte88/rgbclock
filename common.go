@@ -45,6 +45,7 @@ var (
 	nightbright int     = 20
 	// event timer display
 	showbright       bool   = false
+	instrument       bool   = false
 	evut             string = ``
 	weatherserveruri string = ``
 	precipitation    string = ``

@@ -62,7 +62,9 @@ func init() {
 
 	scroll = viper.GetInt("RGB.scroll_limit")
 	hardware = viper.GetString("RGB.hardware")
+
 	showbright = viper.GetBool("RGB.showbright")
+	instrument = viper.GetBool("RGB.instrument")
 	experiment = viper.GetBool("RGB.experiment")
 
 	colorgrad1 = viper.GetString("RGB.colorgrad1")
@@ -141,6 +143,7 @@ func init() {
 		capture = viper.GetBool("capture")
 
 		showbright = viper.GetBool("RGB.showbright")
+		instrument = viper.GetBool("RGB.instrument")
 		experiment = viper.GetBool("RGB.experiment")
 
 		activeFrom, err = parseTime(viper.GetString("transport.active.from"))
@@ -242,11 +245,10 @@ func main() {
 		Size: hf * 0.066,
 	})
 
-	mbtaface := truetype.NewFace(font, &truetype.Options{
+	transit.SetFace(truetype.NewFace(font, &truetype.Options{
 		Size: hf * 0.066,
-	})
-
-	transit.SetFace(mbtaface)
+		DPI:  72,
+	}))
 	transit.Start()
 	defer transit.Stop()
 
@@ -267,14 +269,11 @@ func main() {
 	grad.AddColorStop(0, parseHexColor(colorgrad1))
 	grad.AddColorStop(1, parseHexColor(colorgrad2))
 
-	// using a 2nd copy of the font for InfoLabel as the mutex seems to cause problems
-	xlmsface := truetype.NewFace(font, &truetype.Options{
+	lms.SetMaxLen(scroll)
+	lms.SetFace(truetype.NewFace(font, &truetype.Options{
 		Size: hf * 0.066,
 		DPI:  72,
-	})
-
-	lms.SetMaxLen(scroll)
-	lms.SetFace(xlmsface, "#ff9900c0")
+	}), "#ff9900c0")
 
 	lastBrightness := brightness
 	var icache draw.Image
@@ -283,14 +282,18 @@ func main() {
 	defer lms.Stop()
 
 	if nil != news {
-		newsface := truetype.NewFace(font, &truetype.Options{
+		news.SetFace(truetype.NewFace(font, &truetype.Options{
 			Size: hf * 0.055,
 			DPI:  72,
-		})
-		news.SetFace(newsface)
+		}))
 	}
-
 	defer newsStop()
+
+	cpu := NewCPUStat(truetype.NewFace(font, &truetype.Options{
+		Size: hf * 0.150,
+		DPI:  72,
+	}), `#00ffff77`)
+	defer cpu.Stop()
 
 	angle := 0.20
 	inca := angle
@@ -443,6 +446,20 @@ func main() {
 			dpos := 2 + (5 * (hf / 8))
 			dc.DrawStringAnchored(temps[idx[0]], wf/4, dpos, 0.5, 0.5)
 			dc.DrawStringAnchored(temps[idx[1]], 3*(wf/4), dpos, 0.5, 0.5)
+			if instrument {
+				if cpu.CPUStatsTemp() != nil {
+					hh := int(cpu.CPUStatsTemp().Bounds().Max.Y / 2)
+					dc.DrawImageAnchored(cpu.CPUStatsTemp(), int(wf/2), hh, .5, .5)
+				}
+				if cpu.CPUStatsUsage() != nil {
+					hh := H - int(cpu.CPUStatsUsage().Bounds().Max.Y/2)
+					dc.DrawImageAnchored(cpu.CPUStatsUsage(), int(wf/2), hh, .5, .5)
+				}
+				if cpu.MemStats() != nil {
+					hh := H - int(2.8*float64(cpu.MemStats().Bounds().Max.Y/2))
+					dc.DrawImageAnchored(cpu.MemStats(), int(wf/2), hh, .5, .5)
+				}
+			}
 			if showbright {
 				dc.DrawStringAnchored(evut, cx, hf-length, 0.5, 0.5)
 			}
