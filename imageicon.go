@@ -7,7 +7,9 @@ import (
 	"image"
 	"image/draw"
 	"io"
+	"io/ioutil"
 	"os"
+	"strings"
 
 	svg "github.com/ajstarks/svgo"
 	"github.com/srwiley/oksvg"
@@ -87,8 +89,16 @@ func getImageIconWIP(i icon) (img draw.Image, err error) {
 
 	if i.asis {
 
-		iconMem.ReadFrom(f)
-
+		if i.filename == windDegIcon && i.rotate != 0 {
+			body, err := ioutil.ReadAll(f)
+			if err != nil {
+				return img, err
+			}
+			bs := strings.Replace(string(body), `rotate(0`, fmt.Sprintf("rotate(%f", i.rotate), -1)
+			iconMem.WriteString(bs)
+		} else {
+			iconMem.ReadFrom(f)
+		}
 	} else {
 
 		var s SVG

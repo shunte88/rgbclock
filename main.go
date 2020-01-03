@@ -417,8 +417,8 @@ func main() {
 				temps = strings.Split(w.Current.Wind, " ")
 				// place wind icon
 				if imWindDir.image != nil {
-					wdx := float64(cx + (wf * 0.09375))
-					wdy := float64(0.312 * hf)
+					wdx := float64(cx + (wf * 0.08))
+					wdy := float64(0.25 * hf)
 					dc.DrawImageAnchored(imWindDir.image, int(wdx), int(wdy), 0.5, 0.5)
 				}
 			}
@@ -461,7 +461,8 @@ func main() {
 				}
 			}
 			if showbright {
-				dc.DrawStringAnchored(evut, cx, hf-length, 0.5, 0.5)
+				dc.DrawStringAnchored(evut, cx, hf-(length-2), 0.5, 0.5)
+				dc.DrawStringAnchored(imIcon.last, cx, (hf-(length-2))-8, 0.5, 0.5)
 			}
 		}
 

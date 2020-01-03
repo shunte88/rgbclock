@@ -80,7 +80,7 @@ var (
 
 const (
 	weatherServerURI = "WEATHER_SERVER_URI"
-	windDegIcon      = "wi-wind-deg"
+	windDegIcon      = "wic-wind-deg"
 	wiColor          = "#66ff99" //"yellow"
 )
 

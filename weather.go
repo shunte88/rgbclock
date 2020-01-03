@@ -120,16 +120,16 @@ func weather() {
 		snap = false
 	}
 
-	imIconDP1, err = cacheImage(w.Current.Daypart1.Icon, imIconDP1, 0.7, ``)
+	imIconDP1, err = cacheImage(w.Current.Daypart1.Icon, imIconDP1, 0.35, ``)
 	checkFatal(err)
 
-	imIconDP2, err = cacheImage(w.Current.Daypart2.Icon, imIconDP2, 0.7, ``)
+	imIconDP2, err = cacheImage(w.Current.Daypart2.Icon, imIconDP2, 0.35, ``)
 	checkFatal(err)
 
-	imIconDP3, err = cacheImage(w.Current.Daypart3.Icon, imIconDP3, 0.7, ``)
+	imIconDP3, err = cacheImage(w.Current.Daypart3.Icon, imIconDP3, 0.35, ``)
 	checkFatal(err)
 
-	imIconDP4, err = cacheImage(w.Current.Daypart4.Icon, imIconDP4, 0.7, ``)
+	imIconDP4, err = cacheImage(w.Current.Daypart4.Icon, imIconDP4, 0.35, ``)
 	checkFatal(err)
 
 	/*
