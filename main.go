@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -28,6 +29,11 @@ var idx = []int{0, 1, 2, 3}
 var capture = false
 
 func init() {
+
+	cpu := runtime.NumCPU()
+	if cpu > 1 {
+		runtime.GOMAXPROCS(cpu - 1)
+	}
 
 	weatherserveruri = os.Getenv(weatherServerURI)
 	if "" == weatherserveruri {
@@ -164,6 +170,7 @@ func init() {
 
 func main() {
 
+	//runtime.SetGCPercent(80)
 	/*
 		defer func() {
 			if err := recover(); err != nil {
@@ -299,6 +306,9 @@ func main() {
 	inca := angle
 	dump := 0
 
+	//var imGlass iconCache
+	//imGlass, _ = cacheImage(`glass`, imGlass, 0.0, ``)
+
 	for {
 
 		if lastBrightness != brightness {
@@ -391,13 +401,13 @@ func main() {
 			temps = strings.Split(w.Current.Temperature, " ")
 		} else {
 			p := w.Current.Daypart0.Precipitation
+			wdx := float64(cx + (wf * 0.09))
+			wdy := float64(0.25 * hf)
 			if 0 == int(s)%2 {
 				if togweather && `0%` != p {
 					temps[1] = p
 					// precipitation
 					if imPrecip.image != nil {
-						wdx := float64(cx + (wf * 0.09))
-						wdy := float64(0.28 * hf)
 						if `100%` == p {
 							wdx += 5.00
 						}
@@ -407,8 +417,6 @@ func main() {
 					temps[1] = w.Current.Humidity
 					// humidity
 					if imHumid.image != nil {
-						wdx := float64(cx + (wf * 0.09))
-						wdy := float64(0.28 * hf)
 						dc.DrawImageAnchored(imHumid.image, int(wdx), int(wdy), 0.5, 0.5)
 					}
 				}
@@ -417,8 +425,6 @@ func main() {
 				temps = strings.Split(w.Current.Wind, " ")
 				// place wind icon
 				if imWindDir.image != nil {
-					wdx := float64(cx + (wf * 0.08))
-					wdy := float64(0.25 * hf)
 					dc.DrawImageAnchored(imWindDir.image, int(wdx), int(wdy), 0.5, 0.5)
 				}
 			}
@@ -465,6 +471,8 @@ func main() {
 				dc.DrawStringAnchored(imIcon.last, cx, (hf-(length-2))-8, 0.5, 0.5)
 			}
 		}
+
+		//dc.DrawImageAnchored(imGlass.image, 0, 0, 0, 0)
 
 		if `play` == lms.Player.Mode {
 

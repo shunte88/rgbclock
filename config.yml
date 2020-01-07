@@ -70,8 +70,8 @@ full:
   icon:
     main:
       alpha: 0.60
-      width: 54
-      scale: 1.80
+      width: 60
+      scale: 1.70
     wind:
       alpha: 0.95
       width: 48

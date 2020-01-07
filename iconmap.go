@@ -80,6 +80,30 @@ func mapInit() {
 		"icon-45":           icon{filename: "wic-night-thunderstorm", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},             // thundershowers (night)
 		"icon-46":           icon{filename: "wic-night-snow", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                     // snow showers (night)
 		"icon-47":           icon{filename: "wic-night-thunderstorm", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},             // isolated thundershowers (night)
+		"clock-0":           icon{filename: "wic-time-12", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-1":           icon{filename: "wic-time-1", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-2":           icon{filename: "wic-time-2", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-3":           icon{filename: "wic-time-3", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-4":           icon{filename: "wic-time-4", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-5":           icon{filename: "wic-time-5", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-6":           icon{filename: "wic-time-6", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-7":           icon{filename: "wic-time-7", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-8":           icon{filename: "wic-time-8", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-9":           icon{filename: "wic-time-9", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-10":          icon{filename: "wic-time-10", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-11":          icon{filename: "wic-time-11", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-12":          icon{filename: "wic-time-12", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-13":          icon{filename: "wic-time-1", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-14":          icon{filename: "wic-time-2", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-15":          icon{filename: "wic-time-3", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-16":          icon{filename: "wic-time-4", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-17":          icon{filename: "wic-time-5", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-18":          icon{filename: "wic-time-6", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-19":          icon{filename: "wic-time-7", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-20":          icon{filename: "wic-time-8", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-21":          icon{filename: "wic-time-9", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-22":          icon{filename: "wic-time-10", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
+		"clock-23":          icon{filename: "wic-time-11", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
 		"wind-0":            icon{filename: "wi-wind-beaufort-0", color: "yellowgreen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
 		"wind-1":            icon{filename: "wi-wind-beaufort-1", color: "yellowgreen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
 		"wind-2":            icon{filename: "wi-wind-beaufort-2", color: "yellowgreen", width: miW, height: miW, alpha: miAlpha, scale: miScale, shadow: true},
@@ -141,6 +165,7 @@ func mapInit() {
 		"alt-corner-scroll": icon{filename: "cscroll2", color: "#0f344340", width: 60, height: 60, scale: 1.0, alpha: 0.35, shadow: false},
 		"globalz":           icon{filename: "globalz", color: "#fffffcc", width: 192, height: 192, scale: 1.0, alpha: 0.025, shadow: true, blur: true},
 		"global":            icon{filename: "global", color: "#fffffcc", width: 192, height: 192, scale: 1.0, alpha: 0.025, shadow: true, blur: true},
+		"glass":             icon{filename: "glass", asis: true, color: "white", width: 192, height: 192, scale: .666666, alpha: 1, shadow: false, blur: false},
 		"skullz":            icon{filename: "arggggh", color: "#6D97ABcc", width: 100, height: 100, scale: 1.0, alpha: 0.5, shadow: true},
 		"cpu-temp":          icon{filename: "cputc", asis: true, width: 60, height: 60, scale: 1.0, alpha: 1.0, shadow: false},
 		"cpu-metrics":       icon{filename: "cpupc", asis: true, width: 60, height: 60, scale: 1.0, alpha: 1.0, shadow: false},
@@ -155,7 +180,7 @@ func getIcon(s string) icon {
 	v, ok := iconMap[s]
 	if !ok || !fileExists(iconFile(v)) {
 		fmt.Println("icon missing?", s, v)
-		v = icon{filename: "wi-alien", color: "red", width: miW, height: miW, scale: 1, alpha: 1, shadow: false}
+		v = icon{filename: "wic-alien", asis: true, color: "red", width: 60, height: 60, scale: 1, alpha: 1, shadow: false}
 	}
 	return v
 }

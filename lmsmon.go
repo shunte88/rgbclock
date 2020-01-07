@@ -7,8 +7,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"image/jpeg"
-	"image/png"
+	"io"
 	"io/ioutil"
 	"math"
 	"net/http"
@@ -535,7 +534,10 @@ func (ls *LMSServer) updatePlayer() {
 				if chka != ls.Player.Album.GetText() ||
 					chkt != ls.Player.Artist.GetText() ||
 					chkp != ls.Player.Title.GetText() {
-					ls.cacheImage()
+					err = ls.cacheImage()
+					if err != nil {
+						panic(err)
+					}
 				}
 			}
 
@@ -655,36 +657,55 @@ func (ls *LMSServer) setPlayModifiers() {
 	draw.Draw(ls.playmodifiers, ls.playmodifiers.Bounds(), canvas, image.ZP, draw.Src)
 }
 
-func (ls *LMSServer) cacheImage() {
+func (ls *LMSServer) getImage(r io.Reader) (image.Image, error) {
+
+	// need to make this buffered and cancel-able!
+	im, err := imaging.Decode(r, imaging.AutoOrientation(true))
+	if err != nil {
+		return nil, err
+	}
+	im = imaging.Resize(im, 500, 500, imaging.Lanczos)
+	return im, nil
+
+}
+
+func (ls *LMSServer) cacheImage() error {
 
 	resp, err := http.Get(ls.arturl)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer resp.Body.Close()
 
-	im, err := jpeg.Decode(resp.Body)
-	if err == nil {
-		ls.coverart = imaging.Resize(im, 500, 500, imaging.Lanczos)
-	} else { // else try another tack
-		im, err := png.Decode(resp.Body)
-		if err == nil {
-			ls.coverart = imaging.Resize(im, 500, 500, imaging.Lanczos)
-		} else {
-			resp.Body.Close()
-			uri := fmt.Sprintf("http://%v:%v/music/0/cover_500x500_o", ls.host, ls.port)
-			fmt.Println(uri)
-			resp, err = http.Get(uri)
-			if err != nil {
-				panic(err)
-			}
-			defer resp.Body.Close()
-			im, err = png.Decode(resp.Body)
-			if err == nil {
-				ls.coverart = imaging.Resize(im, 500, 500, imaging.Lanczos)
-			} else {
-				fmt.Println(err)
-			}
-		}
+	// chunked or large images blank the coverart - slow load
+	cl, _ := strconv.ParseInt(resp.Header.Get(`content-length`), 10, 64)
+	fmt.Println(`bytes:`, cl)
+	if cl == -1 || cl > 1000000 {
+		ls.coverart = imaging.New(500, 500, color.NRGBA{0, 0, 0, 0})
 	}
+
+	im, err := ls.getImage(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if im == nil {
+
+		resp.Body.Close()
+		resp, err = http.Get(fmt.Sprintf("http://%v:%v/music/0/cover_500x500_o", ls.host, ls.port))
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		im, err = ls.getImage(resp.Body)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	ls.coverart = im.(draw.Image)
+	return nil
+
 }
