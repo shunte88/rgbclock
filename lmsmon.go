@@ -219,6 +219,7 @@ type LMSServer struct {
 	face          font.Face
 	fontHeight    float64
 	color         color.Color
+	cacache       *CARedis
 	update        chan bool
 }
 
@@ -335,7 +336,19 @@ func NewLMSServer(host string, port int, player string) *LMSServer {
 	ls.face = basicfont.Face7x13
 	ls.fontHeight = 13
 	ls.color = color.White
+
+	car, err := InitImageCache(`127.0.0.1`, 6379)
+	if nil != err {
+		panic(err)
+	}
+	ls.cacache = car
 	return ls
+
+}
+
+// Close the associated cache
+func (ls *LMSServer) Close() {
+	ls.cacache.Close()
 }
 
 // PlayerMAC sets player MAC - useful if current player changes
@@ -439,6 +452,7 @@ func (ls *LMSServer) updatePlayer() {
 
 			if `play` == s.Mode {
 
+				ckcd := ls.Player.coverid
 				chka := ls.Player.Album.GetText()
 				chkt := ls.Player.Artist.GetText()
 				chkp := ls.Player.Title.GetText()
@@ -482,6 +496,7 @@ func (ls *LMSServer) updatePlayer() {
 					ls.Player.Conductor.SetText(``)
 					ls.Player.Year = s.RemoteMeta.Year
 					ls.Player.Genre = s.RemoteMeta.Genre
+					ls.Player.coverid = s.RemoteMeta.Coverid
 					//fmt.Printf("%v\n", s.RemoteMeta.Coverid)
 					//fmt.Printf("%v\n", s.RemoteMeta.URL)
 				} else {
@@ -518,6 +533,7 @@ func (ls *LMSServer) updatePlayer() {
 					}
 					ls.Player.Year = s.PlaylistLoop[0].Year
 					ls.Player.Genre = s.PlaylistLoop[0].Genre
+					ls.Player.coverid = s.PlaylistLoop[0].Coverid
 
 					switch ls.Player.Samplesize {
 					case 1:
@@ -533,7 +549,8 @@ func (ls *LMSServer) updatePlayer() {
 
 				if chka != ls.Player.Album.GetText() ||
 					chkt != ls.Player.Artist.GetText() ||
-					chkp != ls.Player.Title.GetText() {
+					chkp != ls.Player.Title.GetText() ||
+					ckcd != ls.Player.coverid {
 					err = ls.cacheImage()
 					if err != nil {
 						panic(err)
@@ -671,41 +688,56 @@ func (ls *LMSServer) getImage(r io.Reader) (image.Image, error) {
 
 func (ls *LMSServer) cacheImage() error {
 
-	resp, err := http.Get(ls.arturl)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+	// check if we have the cover cached
+	//im, ok := ls.cacache.GetImage(ls.Player.coverid)
+	var im image.Image = nil
+	ok := false
+	if ok {
+		ls.coverart = im.(draw.Image)
+		return nil
 
-	// chunked or large images blank the coverart - slow load
-	cl, _ := strconv.ParseInt(resp.Header.Get(`content-length`), 10, 64)
-	fmt.Println(`bytes:`, cl)
-	if cl == -1 || cl > 1000000 {
-		ls.coverart = imaging.New(500, 500, color.NRGBA{0, 0, 0, 0})
-	}
+	} else {
 
-	im, err := ls.getImage(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if im == nil {
-
-		resp.Body.Close()
-		resp, err = http.Get(fmt.Sprintf("http://%v:%v/music/0/cover_500x500_o", ls.host, ls.port))
+		resp, err := http.Get(ls.arturl)
 		if err != nil {
 			return err
 		}
 		defer resp.Body.Close()
+
+		// chunked or large images blank the coverart - slow load
+		cl, _ := strconv.ParseInt(resp.Header.Get(`content-length`), 10, 64)
+		fmt.Println(ls.Player.coverid, `size:`, cl)
+		if cl == -1 || cl > 1000000 {
+			ls.coverart = imaging.New(500, 500, color.NRGBA{0, 0, 0, 0})
+		}
 
 		im, err = ls.getImage(resp.Body)
 		if err != nil {
 			return err
 		}
 
+		if im == nil {
+
+			resp.Body.Close()
+			resp, err = http.Get(fmt.Sprintf("http://%v:%v/music/0/cover_500x500_o", ls.host, ls.port))
+			if err != nil {
+				return err
+			}
+			defer resp.Body.Close()
+
+			im, err = ls.getImage(resp.Body)
+			if err != nil {
+				return err
+			}
+
+		}
+
+		if im != nil {
+			ls.coverart = im.(draw.Image)
+			//ls.cacache.SetImage(ls.Player.coverid, im)
+		}
 	}
 
-	ls.coverart = im.(draw.Image)
 	return nil
 
 }

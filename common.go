@@ -20,6 +20,11 @@ type feed struct {
 	link  string
 }
 
+type daylight struct {
+	brightness int
+	isdaylight bool
+}
+
 var (
 	folding     bool = false
 	detail      bool = false
@@ -68,7 +73,7 @@ var (
 	fontfile           = `font/LCDM2B__.TTF`
 	fontfile2          = `font/Roboto-Thin.ttf`
 	lastHorizon        = ``
-	brightness         = 20
+	daymode            = daylight{20, false}
 	colorgrad1  string = `#56ccf240`
 	colorgrad2  string = `#2f80ed40`
 	sunrise            = time.Now()

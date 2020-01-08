@@ -156,10 +156,10 @@ func weather() {
 
 	check, _ := parseTime(time.Now().Format("03:04 PM"))
 	if check.After(sunrise) && check.Before(sunset.Add(-time.Minute)) {
-		brightness = daybright
+		daymode = daylight{daybright, true}
 		evut = nextEvent(check, sunset)
 	} else {
-		brightness = nightbright
+		daymode = daylight{nightbright, false}
 		nooner, _ := parseTime(`11:59 AM`)
 		if check.Before(nooner) {
 			evut = nextEvent(check, sunrise)

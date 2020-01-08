@@ -170,7 +170,6 @@ func init() {
 
 func main() {
 
-	//runtime.SetGCPercent(80)
 	/*
 		defer func() {
 			if err := recover(); err != nil {
@@ -179,7 +178,8 @@ func main() {
 		}()
 	*/
 
-	// 4->9 (125%)
+	defer lms.Close()
+
 	weather()
 
 	mode = true
@@ -189,7 +189,7 @@ func main() {
 	config.Cols = cols
 	config.Parallel = parallel
 	config.ChainLength = chain
-	config.Brightness = brightness
+	config.Brightness = daymode.brightness
 	config.HardwareMapping = hardware
 	config.ShowRefreshRate = false
 	config.InverseColors = false
@@ -282,7 +282,7 @@ func main() {
 		DPI:  72,
 	}), "#ff9900c0")
 
-	lastBrightness := brightness
+	lastBrightness := daymode.brightness
 	var icache draw.Image
 
 	lms.Start()
@@ -311,9 +311,9 @@ func main() {
 
 	for {
 
-		if lastBrightness != brightness {
-			err = rgbc.SetBrightness(uint32(brightness))
-			lastBrightness = brightness
+		if lastBrightness != daymode.brightness {
+			err = rgbc.SetBrightness(uint32(daymode.brightness))
+			lastBrightness = daymode.brightness
 			if nil != err {
 				fmt.Println("brightness", err)
 			}
