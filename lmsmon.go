@@ -219,8 +219,8 @@ type LMSServer struct {
 	face          font.Face
 	fontHeight    float64
 	color         color.Color
-	cacache       *CARedis
-	update        chan bool
+	//cacache       *CARedis
+	update chan bool
 }
 
 // NewLMSPlayer initiate an LMS player
@@ -336,19 +336,20 @@ func NewLMSServer(host string, port int, player string) *LMSServer {
 	ls.face = basicfont.Face7x13
 	ls.fontHeight = 13
 	ls.color = color.White
-
-	car, err := InitImageCache(`127.0.0.1`, 6379)
-	if nil != err {
-		panic(err)
-	}
-	ls.cacache = car
+	/*
+		car, err := InitImageCache(`127.0.0.1`, 6379)
+		if nil != err {
+			panic(err)
+		}
+		ls.cacache = car
+	*/
 	return ls
 
 }
 
 // Close the associated cache
 func (ls *LMSServer) Close() {
-	ls.cacache.Close()
+	//ls.cacache.Close()
 }
 
 // PlayerMAC sets player MAC - useful if current player changes
