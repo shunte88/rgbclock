@@ -64,7 +64,7 @@ func mapInit() {
 		"icon-28":           icon{filename: "wic-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                    // mostly cloudy (day)
 		"icon-29":           icon{filename: "wic-night-partly-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                       // partly cloudy (night)
 		"icon-30":           icon{filename: "wic-day-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                // partly cloudy (day)
-		"icon-31":           icon{filename: "wic-night-clear", asis: true, color: "linen", width: 60, height: 60, alpha: .8, scale: miScale / 2, shadow: true},                                    // clear (night)
+		"icon-31":           icon{filename: "wic-night-clear", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                               // clear (night)
 		"icon-32":           icon{filename: "wic-day-sunny", asis: true, color: "yellow", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true, popcolor: "yellow"},            // sunny
 		"icon-33":           icon{filename: "wic-stars", asis: true, color: "linen", width: 60, height: 60, alpha: .8, scale: miScale / 2, shadow: true},                                          // fair (night)
 		"icon-34":           icon{filename: "wic-day-sunny", asis: true, color: "yellow", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                // fair (day)
