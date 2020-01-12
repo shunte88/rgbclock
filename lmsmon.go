@@ -211,7 +211,6 @@ type LMSServer struct {
 	web           string
 	url           string
 	arturl        string
-	blank         draw.Image
 	coverart      draw.Image
 	volume        draw.Image
 	playmodifiers draw.Image
@@ -317,7 +316,7 @@ func (p *LMSPlayer) Start() {
 }
 
 // NewLMSServer initiates an LMS server instance
-func NewLMSServer(host string, port int, player string) *LMSServer {
+func NewLMSServer(host string, port int, player, base string) *LMSServer {
 	ls := new(LMSServer)
 
 	if `` == host {
@@ -329,7 +328,6 @@ func NewLMSServer(host string, port int, player string) *LMSServer {
 	ls.web = fmt.Sprintf("http://%s:%d", host, port)
 	ls.arturl = fmt.Sprintf("%s/music/current/cover.jpg?player=%s", ls.web, player)
 	ls.coverart = imaging.New(500, 500, color.NRGBA{0, 0, 0, 0})
-	ls.blank = imaging.New(500, 500, color.NRGBA{0, 0, 0, 0})
 	ls.url = fmt.Sprintf("%s/jsonrpc.js", ls.web)
 	ls.web += `/`
 	ls.Player = NewLMSPlayer(player)
@@ -338,7 +336,7 @@ func NewLMSServer(host string, port int, player string) *LMSServer {
 	ls.face = basicfont.Face7x13
 	ls.fontHeight = 13
 	ls.color = color.White
-	ls.cacache = InitImageCache(`/tmp`)
+	ls.cacache = InitImageCache(base)
 
 	return ls
 
@@ -690,7 +688,7 @@ func (ls *LMSServer) cacheImage() error {
 	im, ok := ls.cacache.GetImage(ls.Player.coverid)
 	if ok {
 
-		ls.coverart = ls.blank
+		draw.Draw(ls.coverart, ls.coverart.Bounds(), &image.Uniform{color.Black}, image.ZP, draw.Src)
 		draw.Draw(ls.coverart, ls.coverart.Bounds(), im, image.ZP, draw.Src)
 		return nil
 
@@ -707,7 +705,7 @@ func (ls *LMSServer) cacheImage() error {
 	cl, _ := strconv.ParseInt(resp.Header.Get(`content-length`), 10, 64)
 	fmt.Println(ls.Player.coverid, `size:`, cl)
 	if cl == -1 || cl > 1000000 {
-		ls.coverart = ls.blank
+		draw.Draw(ls.coverart, ls.coverart.Bounds(), &image.Uniform{color.Black}, image.ZP, draw.Src)
 	}
 
 	im, err = ls.getImage(resp.Body)
@@ -732,7 +730,7 @@ func (ls *LMSServer) cacheImage() error {
 	}
 
 	if im != nil {
-		ls.coverart = im.(draw.Image)
+		draw.Draw(ls.coverart, ls.coverart.Bounds(), im, image.ZP, draw.Src)
 		ls.cacache.SetImage(ls.Player.coverid, im)
 	}
 

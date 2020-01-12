@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -27,8 +28,12 @@ import (
 
 var idx = []int{0, 1, 2, 3}
 var capture = false
+var base string
 
 func init() {
+
+	base, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	checkFatal(err)
 
 	cpu := runtime.NumCPU()
 	if cpu > 1 {
@@ -43,7 +48,7 @@ func init() {
 	viper.SetConfigName("config")
 	viper.AddConfigPath("$HOME/rgbclock")
 	viper.AddConfigPath(".")
-	err := viper.ReadInConfig()
+	err = viper.ReadInConfig()
 	checkFatal(err)
 
 	fontfile = viper.GetString("RGB.fontfile")
@@ -117,7 +122,7 @@ func init() {
 	lmsIP := viper.GetString("LMS.IP")
 	lmsPort := viper.GetInt("LMS.port")
 	lmsPlayer := viper.GetString("LMS.player")
-	lms = NewLMSServer(lmsIP, lmsPort, lmsPlayer)
+	lms = NewLMSServer(lmsIP, lmsPort, lmsPlayer, base+`/cache/`)
 
 	offset := viper.GetInt("transport.offset")
 	route := viper.GetString("transport.route")
@@ -306,8 +311,8 @@ func main() {
 	inca := angle
 	dump := 0
 
-	//var imGlass iconCache
-	//imGlass, _ = cacheImage(`glass`, imGlass, 0.0, ``)
+	orangered := `#ff0000` // `#ff4500`
+	darkred := `#660000`
 
 	for {
 
@@ -340,7 +345,7 @@ func main() {
 			dc.DrawCircle(cx, cy, r+1)
 			dc.Fill()
 
-			dc.SetHexColor("#ff0000")
+			dc.SetHexColor(orangered)
 			dc.SetLineWidth(lw)
 			for i := 0; i < 60; i += 5 {
 
@@ -373,12 +378,12 @@ func main() {
 
 		// glitchy under one second ??
 		if ea < 8 {
-			dc.SetHexColor("#660000")
+			dc.SetHexColor(darkred)
 			dc.DrawCircle(float64(cx), float64(cy), float64(r))
 			dc.Stroke()
 		}
 
-		dc.SetHexColor("#ff0000")
+		dc.SetHexColor(orangered)
 		dc.DrawArc(float64(cx), float64(cy), float64(r), degToRadians(0), degToRadians(ea))
 		dc.Stroke()
 
@@ -389,8 +394,8 @@ func main() {
 			colon = ` `
 		}
 
-		placeTime(dc, wf, hf, zface, ts, colon, "#660000")
-		placeTime(dc, wf, hf, face, ts, colon, "#ff0000")
+		placeTime(dc, wf, hf, zface, ts, colon, darkred)
+		placeTime(dc, wf, hf, face, ts, colon, orangered)
 
 		// place weather icon
 		if imIcon.image != nil {
@@ -452,6 +457,13 @@ func main() {
 			dpos := 2 + (5 * (hf / 8))
 			dc.DrawStringAnchored(temps[idx[0]], wf/4, dpos, 0.5, 0.5)
 			dc.DrawStringAnchored(temps[idx[1]], 3*(wf/4), dpos, 0.5, 0.5)
+
+			//moonI, err := NewLuna(t).PhaseIcon(20, 20)
+			moonI, err := NewLuna(t).PhaseIcon(22, 22)
+			if err == nil && moonI != nil {
+				dc.DrawImageAnchored(moonI, int(3*(wf/4))+2, int(3*(hf/4))+2, .5, .5)
+			}
+
 			if instrument {
 				if cpu.CPUStatsTemp() != nil {
 					hh := int(cpu.CPUStatsTemp().Bounds().Max.Y / 2)
@@ -471,8 +483,6 @@ func main() {
 				dc.DrawStringAnchored(imIcon.last, cx, (hf-(length-2))-8, 0.5, 0.5)
 			}
 		}
-
-		//dc.DrawImageAnchored(imGlass.image, 0, 0, 0, 0)
 
 		if `play` == lms.Player.Mode {
 
@@ -601,11 +611,11 @@ func placeBorderZone(dc *gg.Context, lmsface font.Face, lw, y1, y2 float64) {
 	dc.SetFontFace(lmsface)
 	dc.SetHexColor("#000000")
 	dc.SetLineWidth(lw - 2)
-	dc.DrawRectangle(0, 67, 128, y1)
+	dc.DrawRectangle(0, 66, 128, y1)
 	dc.Stroke()
 	dc.SetLineWidth(0.5)
 	dc.SetHexColor("#ff9900")
-	dc.DrawRectangle(0, 67, 128, y2)
+	dc.DrawRectangle(0, 66, 128, y2)
 	dc.Stroke()
 }
 
