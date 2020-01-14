@@ -54,6 +54,7 @@ func (car *CACache) Get(key string) (resp []byte, ok bool) {
 
 		le, okc := car.cache[key]
 		if !okc {
+			car.setLRU(key) // back-fill orphans
 			return resp, ok
 		}
 
@@ -94,6 +95,10 @@ func (car *CACache) Set(key string, resp []byte) {
 	if nil != err {
 		fmt.Println(`set caught`, err)
 	}
+	car.setLRU(key)
+}
+
+func (car *CACache) setLRU(key string) {
 
 	// LRU mech.
 	expires := int64(0)

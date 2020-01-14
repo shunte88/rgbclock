@@ -1,0 +1,33 @@
+<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  <filter id="filter3315">
+   <feGaussianBlur stdDeviation="3.7" id="feGaussianBlur3317"/>
+  </filter>
+  <linearGradient id="linearGradient3273">
+   <stop offset="0" id="stop3275" stop-color="#6c6c6c"/>
+   <stop offset="1" id="stop3277" stop-color="#3e3e3e"/>
+  </linearGradient>
+  <linearGradient id="linearGradient3153">
+   <stop offset="0" id="stop3155" stop-color="darkslateblue"/>
+   <stop offset="1" id="stop3157" stop-opacity="0" stop-color="#ffffff"/>
+  </linearGradient>
+  <radialGradient xlink:href="#linearGradient3153" id="radialGradient3328" gradientUnits="userSpaceOnUse" gradientTransform="matrix(-0.8695893,0.8695893,-1.9614862,-1.9614862,681.5104,178.1413)" cx="289.42923" cy="209.66924" fx="289.42923" fy="209.66924" r="92.5"/>
+  <radialGradient xlink:href="#linearGradient3153" id="radialGradient3331" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0.8695893,-0.8695893,1.9614862,1.9614862,-281.5104,221.8587)" cx="289.42923" cy="209.66924" fx="289.42923" fy="209.66924" r="92.5"/>
+  <radialGradient xlink:href="#linearGradient3273" id="radialGradient3352" gradientUnits="userSpaceOnUse" gradientTransform="matrix(0,2.7782147,-0.8238786,0,358.87983,-353.64609)" cx="199.28125" cy="192.84375" fx="199.28125" fy="192.84375" r="68.84375"/>
+ </defs>
+
+ <g>
+  <g id="svg_1" display="inline">
+   <path id="svg_2" d="m202.71429,19c-102.12,0 -185,82.88 -185,185c0,102.12 82.88,185 185,185c102.12,0 185.00002,-82.88 185,-185c0,-102.12 -82.88,-185 -185,-185zm0,179.8125c2.86645,0 5.18749,2.32105 5.1875,5.1875c0,2.86645 -2.32105,5.18749 -5.1875,5.1875c-2.86645,0 -5.18749,-2.32105 -5.1875,-5.1875c0,-2.86645 2.32105,-5.18749 5.1875,-5.1875z" filter="url(#filter3315)" stroke-dashoffset="0" stroke-miterlimit="4" marker-end="none" marker-mid="none" marker-start="none" stroke-width="2.7" fill-rule="evenodd" fill-opacity="0.50857" fill="#000000"/>
+   <path id="svg_3" d="m200,15c-102.12,0 -185,82.88 -185,185c0,102.12 82.88,185 185,185c102.12,0 185.00002,-82.88 185,-185c0,-102.12 -82.88,-185 -185,-185zm0,179.8125c2.86645,0 5.18749,2.32105 5.1875,5.1875c0,2.86645 -2.32105,5.18749 -5.1875,5.1875c-2.86645,0 -5.18749,-2.32105 -5.1875,-5.1875c0,-2.86645 2.32105,-5.18749 5.1875,-5.1875z" stroke-dashoffset="0" stroke-miterlimit="4" marker-end="none" marker-mid="none" marker-start="none" stroke-width="2.7" fill-rule="evenodd" fill="#000000"/>
+   <path id="svg_4" d="m200,132.65625c-37.15925,0 -67.34375,30.1845 -67.34375,67.34375c0,37.15925 30.1845,67.34375 67.34375,67.34375c37.15925,0 67.34375,-30.1845 67.34375,-67.34375c0,-37.15925 -30.1845,-67.34375 -67.34375,-67.34375zm0,62.90625c2.45408,0 4.4375,1.98342 4.4375,4.4375c0,2.45408 -1.98342,4.4375 -4.4375,4.4375c-2.45408,0 -4.4375,-1.98342 -4.4375,-4.4375c0,-2.45408 1.98342,-4.4375 4.4375,-4.4375z" stroke-dashoffset="0" stroke-miterlimit="4" marker-end="none" marker-mid="none" marker-start="none" stroke-width="2.7" fill-rule="evenodd" fill="#333333"/>
+   <path id="svg_5" d="m200,15c-102.12,0 -185,82.88 -185,185c0,102.12 82.88,185 185,185c102.12,0 185.00002,-82.88 185,-185c0,-102.12 -82.88,-185 -185,-185zm0,3.59375c100.14858,0 181.4375,81.25768 181.4375,181.40625c0.00001,100.14858 -81.28893,181.4375 -181.4375,181.4375c-100.14857,-0.00001 -181.4375,-81.28893 -181.4375,-181.4375c0,-100.14857 81.28893,-181.40625 181.4375,-181.40625z" stroke-dashoffset="0" stroke-miterlimit="4" marker-end="none" marker-mid="none" marker-start="none" stroke-width="2.7" fill-rule="evenodd" fill="#000000"/>
+   <path id="svg_6" d="m293.5625,200c0,51.65143 -41.91107,93.59375 -93.5625,93.59375l0,87.84375c100.14857,0 181.43751,-81.28892 181.4375,-181.4375l-87.875,0z" stroke-dashoffset="0" stroke-miterlimit="4" marker-end="none" marker-mid="none" marker-start="none" stroke-width="2.7" fill-rule="evenodd" fill="url(#radialGradient3331)"/>
+   <path id="svg_7" d="m106.4375,200c0,-51.65143 41.91107,-93.59375 93.5625,-93.59375l0,-87.84375c-100.14857,0 -181.43751,81.28892 -181.4375,181.4375l87.875,0z" stroke-dashoffset="0" stroke-miterlimit="4" marker-end="none" marker-mid="none" marker-start="none" stroke-width="2.7" fill-rule="evenodd" fill="url(#radialGradient3328)"/>
+   <path id="svg_8" d="m248.67988,151.32012c-26.86689,-26.86689 -70.49287,-26.86689 -97.35976,0c-26.86689,26.86689 -26.86689,70.49288 0,97.35977c26.86689,26.86689 70.49287,26.86689 97.35976,0c26.86689,-26.86689 26.86689,-70.49288 0,-97.35977zm-2.14341,2.14342c25.68403,25.68404 25.68404,67.38891 0,93.07293c-25.68404,25.68404 -67.38891,25.68405 -93.07294,0c-25.68403,-25.68403 -25.68402,-67.38889 0,-93.07293c25.68404,-25.68403 67.3889,-25.68403 93.07294,0z" stroke-dashoffset="0" stroke-miterlimit="4" marker-end="none" marker-mid="none" marker-start="none" stroke-width="2.7" fill-rule="evenodd" fill="url(#radialGradient3352)"/>
+   <path id="svg_9" d="m237.9628,162.03721c-20.95262,-20.9526 -54.97299,-20.95261 -75.9256,0c-20.9526,20.95262 -20.9526,54.97299 0,75.92559c20.95262,20.9526 54.97299,20.95261 75.9256,0c20.9526,-20.95261 20.9526,-54.97298 0,-75.92559zm-34.29468,34.29468c2.02688,2.02689 2.02688,5.30934 0,7.33623c-2.02689,2.02689 -5.30934,2.02688 -7.33624,0c-2.02688,-2.02688 -2.02688,-5.30934 0,-7.33623c2.02689,-2.02688 5.30934,-2.02688 7.33624,0z" stroke-dashoffset="0" stroke-miterlimit="4" marker-end="none" marker-mid="none" marker-start="none" stroke-width="2.7" fill-rule="evenodd" fill="maroon"/>
+   <path id="svg_10" d="m243.95111,156.0489c-7.06177,-7.06176 -15.40617,-12.05335 -24.2847,-15.00392l-1.23744,3.71231c8.31532,2.76444 16.12455,7.46249 22.7379,14.07584c8.05626,8.05626 13.25594,17.88433 15.60055,28.24008l3.82279,-0.86178c-2.50205,-11.05558 -8.03761,-21.56103 -16.6391,-30.16253z" stroke-dashoffset="0" stroke-miterlimit="4" marker-end="none" marker-mid="none" marker-start="none" stroke-width="2.7" fill-rule="evenodd" fill="linen" opacity="0.74257"/>
+   <path id="svg_11" d="m142.61386,190.25519l-3.88908,-0.66291c-3.23715,19.17313 2.53847,39.5732 17.32411,54.35884c14.74595,14.74593 35.07597,20.5264 54.20416,17.34621l-0.64082,-3.86699c-17.92511,2.98388 -36.96183,-2.44619 -50.7791,-16.26346c-13.85228,-13.85228 -19.25338,-32.94694 -16.21927,-50.91169z" stroke-dashoffset="0" stroke-miterlimit="4" marker-end="none" marker-mid="none" marker-start="none" stroke-width="2.7" fill-rule="evenodd" fill="linen" opacity="0.74257"/>
+  </g>
+ </g>
+</svg>

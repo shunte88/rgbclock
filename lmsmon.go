@@ -212,6 +212,7 @@ type LMSServer struct {
 	url           string
 	arturl        string
 	coverart      draw.Image
+	defaultart    draw.Image
 	volume        draw.Image
 	playmodifiers draw.Image
 	Player        *LMSPlayer
@@ -328,6 +329,11 @@ func NewLMSServer(host string, port int, player, base string) *LMSServer {
 	ls.web = fmt.Sprintf("http://%s:%d", host, port)
 	ls.arturl = fmt.Sprintf("%s/music/current/cover.jpg?player=%s", ls.web, player)
 	ls.coverart = imaging.New(500, 500, color.NRGBA{0, 0, 0, 0})
+
+	i := getIcon(`vinyl2`)
+	i.scale = 500 / float64(i.width)
+	ls.defaultart, _ = getImageIconWIP(i)
+
 	ls.url = fmt.Sprintf("%s/jsonrpc.js", ls.web)
 	ls.web += `/`
 	ls.Player = NewLMSPlayer(player)
@@ -449,10 +455,6 @@ func (ls *LMSServer) updatePlayer() {
 			if `play` == s.Mode {
 
 				ckcd := ls.Player.coverid
-				chka := ls.Player.Album.GetText()
-				chkt := ls.Player.Artist.GetText()
-				chkp := ls.Player.Title.GetText()
-
 				ls.Player.Volume = s.MixerVolume
 
 				if ls.Player.Volume != ls.Player.lastVol {
@@ -543,14 +545,10 @@ func (ls *LMSServer) updatePlayer() {
 					ls.Player.Year = "????"
 				}
 
-				if chka != ls.Player.Album.GetText() ||
-					chkt != ls.Player.Artist.GetText() ||
-					chkp != ls.Player.Title.GetText() ||
-					ckcd != ls.Player.coverid {
+				if ckcd != ls.Player.coverid {
+					//go ls.cacheImageBackground()
 					err = ls.cacheImage()
-					if err != nil {
-						panic(err)
-					}
+					checkFatal(err)
 				}
 			}
 
@@ -682,13 +680,26 @@ func (ls *LMSServer) getImage(r io.Reader) (image.Image, error) {
 
 }
 
+func (ls *LMSServer) drawBase(defart bool) {
+	if defart {
+		draw.Draw(ls.coverart, ls.coverart.Bounds(), ls.defaultart, image.ZP, draw.Src)
+	} else {
+		draw.Draw(ls.coverart, ls.coverart.Bounds(), &image.Uniform{color.Black}, image.ZP, draw.Src)
+	}
+}
+
+func (ls *LMSServer) cacheImageBackground() {
+	err := ls.cacheImage()
+	checkFatal(err)
+}
+
 func (ls *LMSServer) cacheImage() error {
 
 	// check if we have the cover cached
 	im, ok := ls.cacache.GetImage(ls.Player.coverid)
 	if ok {
 
-		draw.Draw(ls.coverart, ls.coverart.Bounds(), &image.Uniform{color.Black}, image.ZP, draw.Src)
+		ls.drawBase(false)
 		draw.Draw(ls.coverart, ls.coverart.Bounds(), im, image.ZP, draw.Src)
 		return nil
 
@@ -703,9 +714,8 @@ func (ls *LMSServer) cacheImage() error {
 	// chunked or large images blank the coverart
 	//slow load on init but we cache the thumbnail
 	cl, _ := strconv.ParseInt(resp.Header.Get(`content-length`), 10, 64)
-	fmt.Println(ls.Player.coverid, `size:`, cl)
 	if cl == -1 || cl > 1000000 {
-		draw.Draw(ls.coverart, ls.coverart.Bounds(), &image.Uniform{color.Black}, image.ZP, draw.Src)
+		ls.drawBase(true)
 	}
 
 	im, err = ls.getImage(resp.Body)

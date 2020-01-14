@@ -458,8 +458,8 @@ func main() {
 			dc.DrawStringAnchored(temps[idx[0]], wf/4, dpos, 0.5, 0.5)
 			dc.DrawStringAnchored(temps[idx[1]], 3*(wf/4), dpos, 0.5, 0.5)
 
-			//moonI, err := NewLuna(t).PhaseIcon(20, 20)
-			moonI, err := NewLuna(t).PhaseIcon(22, 22)
+			mx := int(wf * 0.171875)
+			moonI, err := NewLuna(t).PhaseIcon(mx, mx)
 			if err == nil && moonI != nil {
 				dc.DrawImageAnchored(moonI, int(3*(wf/4))+2, int(3*(hf/4))+2, .5, .5)
 			}

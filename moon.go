@@ -359,7 +359,6 @@ func (m *Moon) PhaseName() string {
 func (m *Moon) PhaseIcon(sw, sh int) (img draw.Image, err error) {
 
 	// dynamic SVG
-	// dynamic SVG
 
 	var pos0 float64 = 30
 	var sweep [2]int
