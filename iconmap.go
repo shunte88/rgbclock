@@ -165,6 +165,7 @@ func mapInit() {
 		"shuffle-2":         icon{filename: "shuffle-album", color: "#ff9900", width: 50, height: 50, scale: 1.0, alpha: .90, shadow: false},
 		"vinyl":             icon{filename: "vinyl400", asis: true, color: "#ffffff", width: 400, height: 400, scale: 1.0, alpha: 1.0, shadow: false},
 		"vinyl2":            icon{filename: "vinyl400l", asis: true, color: "#ffffff", width: 400, height: 400, scale: 1.0, alpha: 1.0, shadow: false},
+		"vumeter":           icon{filename: "vumeter2", asis: true, color: "#ffffff", width: 1080, height: 600, scale: 0.1666667, alpha: 1.0, shadow: false},
 		"alt-corner-scroll": icon{filename: "cscroll2", color: "#0f344340", width: 60, height: 60, scale: 1.0, alpha: 0.35, shadow: false},
 		"globalz":           icon{filename: "globalz", color: "#fffffcc", width: 192, height: 192, scale: 1.0, alpha: 0.025, shadow: true, blur: true},
 		"global":            icon{filename: "global", color: "#fffffcc", width: 192, height: 192, scale: 1.0, alpha: 0.025, shadow: true, blur: true},

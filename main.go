@@ -459,7 +459,7 @@ func main() {
 			dc.DrawStringAnchored(temps[idx[1]], 3*(wf/4), dpos, 0.5, 0.5)
 
 			mx := int(wf * 0.171875)
-			moonI, err := NewLuna(t).PhaseIcon(mx, mx)
+			moonI, err := NewLuna(t, 42.365250, -71.105011).PhaseIcon(mx, mx)
 			if err == nil && moonI != nil {
 				dc.DrawImageAnchored(moonI, int(3*(wf/4))+2, int(3*(hf/4))+2, .5, .5)
 			}
@@ -528,6 +528,9 @@ func main() {
 			}
 			dc.SetHexColor("#0099ffcc")
 			dc.DrawStringAnchored(lms.Player.Bitty, float64(W/2), base, 0.5, 0.5)
+
+			dc.DrawImageAnchored(lms.VolumePopup(50, 50), int(wf/2), int(hf/4), .5, .5)
+
 		} else if transit.Display {
 			pinClockTop(dc)
 			placeWeatherDetail(dc, hf/2, dptface)

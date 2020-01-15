@@ -169,12 +169,7 @@ func weather() {
 	}
 
 	hr, _, _ := time.Now().Clock()
-	if hr != lastHour {
-		m := NewLuna(time.Now())
-		test := fmt.Sprintf("moon-%d", m.PhaseFix())
-		imMoon, err = cacheImage(test, imMoon, 0.00, ``)
-		checkFatal(err)
-	}
+
 	lastHour = hr
 
 	// a little tweaking

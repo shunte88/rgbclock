@@ -19,6 +19,7 @@ The initial build used python and SVG to paint the display.  As more features we
 Note the animation here is rather blocky, but the actual operation is buttery Rolex smooth
  
 <img width="400" src="assets/rgbclock.gif" align="center" />
+<img width="400" src="assets/rgbclock2.gif" align="center" />
 
 Weather data are obtained via the weathercache mechanism that is located in the scrollclock repo.  The weather icons come from the [Erik Flowers] SVG collection with some  programmatic modifications applied as they are rendered.  Full color icons have replaced the Flowers originals and configuration allows you to switch between the two.
 

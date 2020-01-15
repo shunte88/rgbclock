@@ -15,23 +15,52 @@ import (
 
 // Moon calculations
 type Moon struct {
-	phase     float64
-	illum     float64
-	age       float64
-	dist      float64
-	angdia    float64
-	sundist   float64
-	sunangdia float64
-	pdata     float64
-	quarters  [8]float64
-	timespace float64
+	phase       float64
+	illum       float64
+	age         float64
+	dist        float64
+	angdia      float64
+	sundist     float64
+	sunangdia   float64
+	pdata       float64
+	quarters    [8]float64
+	timespace   float64
+	azimuth     float64
+	altitude    float64
+	distance    float64
+	e           float64
+	stCoef0Nano int64
+	stCoef1Nano int64
+	rad         float64
+	daySec      int64
+	halfDaySec  int64
+	halfDayNano int64
+	j1970       int64
+	j2000       int64
+}
+
+type JulianDate struct {
+	julianDayNumber int64
+	time            int64 //nanoseconds since the beginning of the day
 }
 
 var synmonth float64 = 29.53058868 // Synodic month (new Moon to new Moon)
 
 // NewLuna creates an instance of the Luna impl. develops math - DOEST NOT INCLUDE OBSERVATION POINT!
-func NewLuna(t time.Time) (moonP *Moon) {
+func NewLuna(t time.Time, lat, lng float64) (moonP *Moon) {
+
 	moonP = new(Moon)
+
+	moonP.rad = math.Pi / 180.0
+	moonP.e = moonP.rad * 23.4397 // obliquity of the Earth
+	moonP.stCoef0Nano = 28016 * 1e7
+	moonP.stCoef1Nano = 3609856235 * 100
+
+	moonP.daySec = 60 * 60 * 24
+	moonP.halfDaySec = 60 * 60 * 12
+	moonP.halfDayNano = 1e9 * 60 * 60 * 12
+	moonP.j1970 = 2440588
+	moonP.j2000 = 2451545
 
 	// Astronomical constants
 	var epoch float64 = 2444238.5 // 1989 January 0.0
@@ -47,7 +76,7 @@ func NewLuna(t time.Time) (moonP *Moon) {
 	var mmlong float64 = 64.975464   // Moon's mean longitude at the epoch
 	var mmlongp float64 = 349.383063 // Mean longitude of the perigee at the epoch
 	var mecc float64 = 0.054900      // Eccentricity of the Moon's orbit
-	var mangsiz float64 = 0.5181     // Moon's angular size at distance a from Earth
+	var mangsiz float64 = 0.5181     // Moon's angular size at distance from Earth
 	var msmax float64 = 384401       // Semi-major axis of Moon's orbit in km
 
 	moonP.timespace = float64(t.Unix())
@@ -94,11 +123,116 @@ func NewLuna(t time.Time) (moonP *Moon) {
 	moonP.illum = moonPhase               // Illuminated fraction (0 to 1)
 	moonP.age = synmonth * moonP.phase    // Age of moon (days)
 	moonP.dist = moonDist                 // Distance (kilometres)
-	moonP.angdia = moonAng                // Angular diameter (degreees)
+	moonP.angdia = moonAng                // Angular diameter (degrees)
 	moonP.sundist = sunDist               // Distance to Sun (kilometres)
 	moonP.sunangdia = sunAng              // Sun's angular diameter (degrees)
 	moonP.phaseHunt()
+
+	moonP.getMoonPosition(t, lat, lng)
+
 	return moonP
+
+}
+
+func (m *Moon) rightAscension(l, b float64) float64 {
+	return math.Atan2(sin(l)*cos(m.e)-math.Tan(b)*sin(m.e), cos(l))
+}
+
+func (m *Moon) declination(l, b float64) float64 {
+	return math.Asin(sin(b)*cos(m.e) + cos(b)*sin(m.e)*sin(l))
+}
+
+func (m *Moon) moonCoords(jd JulianDate) (dec, ra, dist float64) { // geocentric ecliptic coordinates of the moon
+
+	d := float64(jd.julianDayNumber) + float64(jd.time)/(1e9*float64(m.daySec))
+
+	L := m.rad * (218.316 + 13.176396*d) // ecliptic longitude
+	M := m.rad * (134.963 + 13.064993*d) // mean anomaly
+	F := m.rad * (93.272 + 13.229350*d)  // mean distance
+
+	l := L + m.rad*6.289*sin(M) // longitude
+	b := m.rad * 5.128 * sin(F) // latitude
+	dt := 385001 - 20905*cos(M) // distance to the moon in km
+
+	ra = m.rightAscension(l, b)
+	dec = m.declination(l, b)
+	dist = dt
+	return
+}
+
+func (m *Moon) siderealTime(d JulianDate, lw float64) float64 {
+	i := (int64(m.stCoef0Nano) + d.julianDayNumber*m.stCoef1Nano) % (360 * 1e9)
+	st := m.rad*(float64(i)/1e9+float64(d.time)/float64(m.daySec)*(float64(m.stCoef1Nano)/1e18)) - lw
+	if st < 0 {
+		st = st + 2*math.Pi
+	}
+	return st
+}
+
+func (m *Moon) calcAzimuth(H, phi, dec float64) float64 {
+	return math.Atan2(sin(H), cos(H)*sin(phi)-math.Tan(dec)*cos(phi))
+}
+func (m *Moon) calcAltitude(H, phi, dec float64) float64 {
+	return math.Asin(sin(phi)*sin(dec) + cos(phi)*cos(dec)*cos(H))
+}
+
+// NewJulian creates a new JulianDate from a time.Time
+func NewJulian(t time.Time) JulianDate {
+	var daySec int64 = 60 * 60 * 24
+	d1970, secs := integerDivide(t.Unix(), daySec)
+	j := d1970 + 2440588 // j1970
+	jdn := JulianDate{
+		julianDayNumber: j,
+		time:            secs*1e9 + int64(t.Nanosecond()),
+	}
+	jdn.removeHalfDay()
+	return jdn
+}
+
+func (j *JulianDate) removeHalfDay() {
+	var halfDayNano int64 = 1e9 * 60 * 60 * 12
+	if j.time < halfDayNano {
+		j.time = j.time + halfDayNano
+		j.julianDayNumber = j.julianDayNumber - 1
+	} else {
+		j.time = j.time - halfDayNano
+	}
+}
+
+func toDays(t time.Time) JulianDate {
+	jdn := NewJulian(t)
+	jdn.julianDayNumber = jdn.julianDayNumber - 2451545 // j2000
+	return jdn
+}
+func (m *Moon) getMoonPosition(date time.Time, lat, lng float64) {
+
+	lw := m.rad * -lng
+	phi := m.rad * lat
+	d := toDays(date)
+
+	dec, ra, distance := m.moonCoords(d)
+	H := m.siderealTime(d, lw) - ra
+	h := m.calcAltitude(H, phi, dec)
+
+	// altitude correction for refraction
+	h = h + m.rad*0.017/math.Tan(h+m.rad*10.26/(h+m.rad*5.10))
+
+	m.azimuth = rad2deg(m.calcAzimuth(H, phi, dec))
+	m.altitude = h
+	m.distance = distance
+
+	//fmt.Println(m.azimuth, m.altitude, m.distance, m.dist)
+
+}
+
+func integerDivide(a, b int64) (q, r int64) {
+	q = a / b
+	r = a % b
+	if r < 0 {
+		q = q - 1
+		r = r + b
+	}
+	return
 }
 
 func sin(a float64) float64 {
@@ -394,6 +528,7 @@ func (m *Moon) PhaseIcon(sw, sh int) (img draw.Image, err error) {
 	canvas.Fend()
 	canvas.DefEnd()
 
+	//canvas.Group(fmt.Sprintf("transform=\"rotate(%f 120 120)\"", m.azimuth))
 	canvas.Group()
 
 	pos1 := `m120,9.5`

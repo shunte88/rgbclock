@@ -62,7 +62,6 @@ var (
 	imIcon      iconCache
 	imWind      draw.Image
 	imWindDir   iconCache
-	imMoon      iconCache
 	imIconDP1   iconCache
 	imIconDP2   iconCache
 	imIconDP3   iconCache
