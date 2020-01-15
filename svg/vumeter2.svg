@@ -1,0 +1,43 @@
+<svg width="1080" height="600" xmlns="http://www.w3.org/2000/svg">
+ <defs>
+  <filter color-interpolation-filters="sRGB" id="blur">
+   <feGaussianBlur stdDeviation="8"/>
+  </filter>
+ </defs>
+  <g>
+   <rect fill="#ffeea9" stroke="#ff0000" stroke-width="3" stroke-miterlimit="4" stroke-dashoffset="0" filter="url(#blur)" y="0.5" x="0.5" height="633" width="1077"/>
+   <path fill="#000000" stroke="#000000" stroke-width="1.50948" stroke-miterlimit="4" stroke-dashoffset="0" 
+d="m537.68074,590.73438a150.76556,150.76556 0 0 0 -107.3086,45.05078l214.73829,0a150.76556,150.76556 0 0 0 -107.42969,-45.05078z"/>
+   <ellipse fill="#ffffff" stroke="#0000ff" stroke-width="0.61062" stroke-miterlimit="4" stroke-dashoffset="0" ry="3.54162" rx="3.78586" cy="730.98907" cx="538.16882"/>
+   <g>
+    <g>
+     <path fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="5" stroke-miterlimit="4" d="m82.5,292.5l45.3061,0"/>
+     <path fill="none" fill-rule="evenodd" stroke="#ff0000" stroke-width="5" stroke-miterlimit="4" d="m948.80743,286.32189l45.3061,0"/>
+     <path fill="none" fill-rule="evenodd" stroke="#ff0000" stroke-width="5" stroke-miterlimit="4" d="m971.46048,263.66884l0,45.3061"/>
+    </g>
+    <path fill="none" fill-rule="evenodd" stroke="#ff0000" stroke-width="15" stroke-miterlimit="4" d="m657.5,277.74518c85.60879,8.87328 173.21481,25.29511 295.97922,75.9692"/>
+    <path fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="15" stroke-miterlimit="4" d="m126.51626,358.2731c161.49448,-60.14366 315.01211,-98.096 531.2366,-81.4418"/>
+    <path fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="8" stroke-miterlimit="4" d="m211.22277,271.80126l34.37058,47.77511"/>
+    <path fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="8" stroke-miterlimit="4" d="m286.15064,250.1478l27.49646,52.24328"/>
+    <path fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="8" stroke-miterlimit="4" d="m366.23409,233.99363l18.56011,52.93069"/>
+    <path fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="8" stroke-miterlimit="4" d="m452.16054,221.62022l8.93635,53.96181"/>
+    <path fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="8" stroke-miterlimit="4" d="m544.6174,217.83945l-0.68741,53.96181"/>
+    <path fill="none" fill-rule="evenodd" stroke="#000000" stroke-width="8" stroke-miterlimit="4" d="m621.26379,220.5891l-8.59264,53.2744"/>
+    <path fill="none" fill-rule="evenodd" stroke="#ff0000" stroke-width="8" stroke-miterlimit="4" d="m669.72631,227.46322l-14.43565,56.36775"/>
+    <path fill="none" fill-rule="evenodd" stroke="#ff0000" stroke-width="8" stroke-miterlimit="4" d="m778.33734,244.3048l-24.40311,48.80622"/>
+    <path fill="none" fill-rule="evenodd" stroke="#ff0000" stroke-width="8" stroke-miterlimit="4" d="m864.9512,319.23266l34.37058,-43.65063"/>
+    <text font-style="bold"   font-weight="bold"   font-size="80px" font-family="sans-serif" fill="#000000" stroke-width="1px" x="493.23926" y="394.36093"><tspan x="493.23926" y="394.36093">VU</tspan></text>
+    <text font-style="normal" font-weight="normal" font-size="50px" font-family="sans-serif" fill="#ff0000" stroke-width="1px" x="903.08594" y="255.99496"><tspan x="903.08594" y="255.99496">5</tspan></text>
+    <text font-style="normal" font-weight="normal" font-size="50px" font-family="sans-serif" fill="#ff0000" stroke-width="1px" x="776.04688" y="219.46762"><tspan x="776.04688" y="219.46762">3</tspan></text>
+    <text font-style="normal" font-weight="normal" font-size="50px" font-family="sans-serif" fill="#ff0000" stroke-width="1px" x="663.63672" y="203.46762"><tspan x="663.63672" y="203.46762">0</tspan></text>
+    <text font-style="normal" font-weight="normal" font-size="50px" font-family="sans-serif" fill="#000000" stroke-width="1px" x="613.39453" y="196.99496"><tspan x="613.39453" y="196.99496">1</tspan></text>
+    <text font-style="normal" font-weight="normal" font-size="50px" font-family="sans-serif" fill="#000000" stroke-width="1px" x="531.04688" y="195.46762"><tspan x="531.04688" y="195.46762">3</tspan></text>
+    <text font-style="normal" font-weight="normal" font-size="50px" font-family="sans-serif" fill="#000000" stroke-width="1px" x="440.08594" y="202.99496"><tspan x="440.08594" y="202.99496">5</tspan></text>
+    <text font-style="normal" font-weight="normal" font-size="50px" font-family="sans-serif" fill="#000000" stroke-width="1px" x="349.28125" y="210.99496"><tspan x="349.28125" y="210.99496">7</tspan></text>
+    <text font-style="normal" font-weight="normal" font-size="50px" font-family="sans-serif" fill="#000000" stroke-width="1px" x="252.39453" y="222.46762"><tspan x="252.39453" y="222.46762">10</tspan></text>
+    <text font-style="normal" font-weight="normal" font-size="50px" font-family="sans-serif" fill="#000000" stroke-width="1px" x="160.92969" y="244.46762"><tspan x="160.92969" y="244.46762">20</tspan></text>
+    <path transform="rotate(0 538.16882 730.98907 )" id="needle" fill="none" fill-rule="evenodd" stroke="darkslategrey" stroke-width="6.7" stroke-miterlimit="4" 
+d="m184.54706,292.20923l353.52706,438.77177"/>
+   </g>
+ </g>
+</svg>
