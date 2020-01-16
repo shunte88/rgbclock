@@ -348,7 +348,7 @@ func NewLMSServer(host string, port int, player, base string) *LMSServer {
 	ls.face = basicfont.Face7x13
 	ls.fontHeight = 13
 	ls.color = color.White
-	ls.cacache = InitImageCache(base)
+	ls.cacache = InitImageCache(base, true)
 
 	ls.volviz = false
 	ls.voltrig = time.NewTimer(2 * time.Second)
@@ -561,6 +561,8 @@ func (ls *LMSServer) updatePlayer() {
 					err = ls.cacheImage()
 					checkFatal(err)
 				}
+			} else {
+				ls.volinit = false
 			}
 
 		} else {
@@ -771,6 +773,7 @@ func (ls *LMSServer) cacheImage() error {
 
 }
 
+// VolumePopup - visualize volume change - a la Ubuntu desktop ;)
 func (ls *LMSServer) VolumePopup(sw, sh int) (img draw.Image) {
 
 	w, h := 80, 80
@@ -789,42 +792,45 @@ func (ls *LMSServer) VolumePopup(sw, sh int) (img draw.Image) {
 		canvas.Gend()
 
 		canvas.Group()
-		// cone
-		canvas.Path(`m12.44251,26.67759l0,19.67841l11.20244,0l16.77001,13.7719l0.00997,-47.2222l-16.7725,13.7719l-11.20991,0l-0.00001,-0.00001z`, `style="fill:linen;"`)
 
-		var opacity [4]string
+		var opacity [5]string
 		switch {
 		case ls.Player.Volume == 0:
-			opacity = [4]string{"0.2", "0.2", "0.2", "1"}
+			opacity = [5]string{"0.2", "0.2", "0.2", "0.2", "1"}
+		case ls.Player.Volume <= 10:
+			opacity = [5]string{"0.2", "0.2", "0.2", "0.2", "0"}
 		case ls.Player.Volume <= 20:
-			opacity = [4]string{"1", "0.2", "0.2", "0"}
+			opacity = [5]string{"1", "0.2", "0.2", "0.2", "0"}
 		case ls.Player.Volume <= 40:
-			opacity = [4]string{"1", "1", "0.2", "0"}
-		case ls.Player.Volume >= 60:
-			opacity = [4]string{"1", "1", "1", "0"}
+			opacity = [5]string{"1", "1", "0.2", "0.2", "0"}
+		case ls.Player.Volume <= 80:
+			opacity = [5]string{"1", "1", "1", "0.2", "0"}
+		case ls.Player.Volume <= 100:
+			opacity = [5]string{"1", "1", "1", "1", "0"}
 		}
-		// 1up
-		canvas.Path(`m12.44251,46.356zm34.41229,-21.94133c-0.97943,-0.96947 -2.55201,-0.96947 -3.52646,0.00498c-0.97196,0.97445 -0.97196,2.55201 0.00498,3.52895l0,-0.00498c2.15077,2.15326 3.47662,5.10652 3.47662,8.38874c0,3.27973 -1.32336,6.22302 -3.47163,8.37628c-0.98193,0.96947 -0.98193,2.54703 -0.00498,3.52646c0.48598,0.48598 1.12398,0.73021 1.76199,0.73021c0.6405,0 1.2785,-0.24424 1.76448,-0.73021c3.04547,-3.04048 4.93456,-7.26476 4.93206,-11.90275c0.00249,-4.64795 -1.89407,-8.87722 -4.93705,-11.9177l-0.00001,0.00002z`,
-			fmt.Sprintf("style=\"fill:linen;fill-opacity:%s;\"", opacity[0]))
-		// 2up
-		canvas.Path(`m12.44251,46.356zm40.13189,-27.65844c-0.97943,-0.97445 -2.55201,-0.97445 -3.52148,0c-0.97694,0.97445 -0.97694,2.5545 0,3.52397c3.61369,3.61618 5.84172,8.59061 5.84172,14.10834c0,5.51275 -2.22803,10.48468 -5.83673,14.10336c-0.97694,0.97196 -0.97694,2.54952 0,3.52397c0.48598,0.48598 1.12398,0.73021 1.76448,0.73021c0.638,0 1.27601,-0.24424 1.76199,-0.73021c4.5059,-4.50839 7.29965,-10.75384 7.29467,-17.62733c0.00249,-6.87847 -2.79126,-13.12891 -7.30464,-17.63231l-0.00001,0z`,
-			fmt.Sprintf("style=\"fill:linen;fill-opacity:%s;\"", opacity[1]))
-		// 3up
-		canvas.Path(`m12.44251,46.356zm45.56239,-33.08894c-0.97943,-0.97445 -2.5545,-0.96947 -3.52397,0.00498c-0.97445,0.96947 -0.97445,2.54952 0.00498,3.52148l-0.00498,0c5.00683,5.00683 8.09466,11.89527 8.09466,19.53635c0,7.63361 -3.08784,14.52454 -8.08968,19.53386c-0.97445,0.97196 -0.97445,2.54952 0.00498,3.52646c0.48349,0.48349 1.12149,0.72523 1.75949,0.72523s1.2785,-0.24424 1.76448,-0.73021c5.88907,-5.89654 9.54762,-14.06348 9.54263,-23.05534c0.00498,-8.99933 -3.65356,-17.16876 -9.5526,-23.06282l0.00001,0.00001z`,
-			fmt.Sprintf("style=\"fill:linen;fill-opacity:%s;\"", opacity[2]))
+
+		// cone
+		canvas.Path(`m9.44252,25.5513l0,17.8031l10.13487,0l15.17187,12.45947l0.00902,-42.72203l-15.17412,12.45947l-10.14163,0l-0.00001,-0.00001z`,
+			`style="fill:palegoldenrod;"`)
+
+		// volume bars
+		for el := 0; el < 4; el++ {
+			canvas.Line(42+(el*8), 29-(el*4), 42+(el*8), 39+(el*4),
+				fmt.Sprintf("style=\"fill:none;stroke:palegoldenrod;stroke-width:3.5;stroke-linecap:round;stroke-opacity:%s;\"", opacity[el]))
+		}
+
 		// mute
-		canvas.Path(`m12.59556,46.1477zm54.80888,-1.67007l-8.00761,-8.00761l8.00616,-8.00761l-4.11587,-4.11878l-8.00761,8.00761l-8.00761,-8.00761l-4.11587,4.11878l8.00616,8.00761l-8.00761,8.00761l4.11878,4.11733l8.00616,-8.00761l8.00616,8.00761l4.11876,-4.11733z`,
-			fmt.Sprintf("style=\"fill:crimson;fill-opacity:%s;\"", opacity[3]))
+		canvas.Path(`m10.59556,46.1477zm54.80888,-1.67007l-8.00761,-8.00761l8.00616,-8.00761l-4.11587,-4.11878l-8.00761,8.00761l-8.00761,-8.00761l-4.11587,4.11878l8.00616,8.00761l-8.00761,8.00761l4.11878,4.11733l8.00616,-8.00761l8.00616,8.00761l4.11876,-4.11733z`,
+			fmt.Sprintf("style=\"fill:crimson;fill-opacity:%s;\"", opacity[4]))
 
 		canvas.Gend()
 
 		canvas.Group()
 		canvas.Line(12, 68, 68, 68, `style="stroke-opacity:0.8;stroke-width:4.5;stroke:black;stroke-linecap:round"`)
-		x2 := 1
 		if ls.Player.Volume > 0 {
-			x2 = int(float64(68-12) * (float64(ls.Player.Volume) / 100.00))
+			x2 := int(float64(68-12) * (float64(ls.Player.Volume) / 100.00))
+			canvas.Line(12, 68, 12+x2, 68, `style="stroke-opacity:0.9;stroke-width:4.1;stroke:linen;stroke-linecap:round"`)
 		}
-		canvas.Line(12, 68, 12+x2, 68, `style="stroke-opacity:1;stroke-width:4.5;stroke:linen;stroke-linecap:round"`)
 		canvas.Gend()
 
 		canvas.End()

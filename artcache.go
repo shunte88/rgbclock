@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
+	"io/ioutil"
+	"os"
+	"path"
 	"sync"
 	"time"
 
@@ -28,7 +31,7 @@ type CACache struct {
 }
 
 // InitImageCache initiates the diskv client
-func InitImageCache(base string) *CACache {
+func InitImageCache(base string, cleanup bool) *CACache {
 	cac := &CACache{
 		conn: diskv.New(diskv.Options{
 			BasePath:     base,
@@ -38,7 +41,34 @@ func InitImageCache(base string) *CACache {
 		lru:    list.New(),
 		cache:  make(map[string]*list.Element),
 	}
+	if cleanup {
+		_ = cac.cleanup()
+	}
 	return cac
+}
+
+func (car *CACache) isOlder(t time.Time, d time.Duration) bool {
+	return time.Now().Sub(t) > d
+}
+
+func (car *CACache) cleanup() (err error) {
+
+	tmpfiles, err := ioutil.ReadDir(car.conn.BasePath)
+	if err != nil {
+		return
+	}
+
+	for _, file := range tmpfiles {
+		if file.Mode().IsRegular() {
+			if car.isOlder(file.ModTime(), 24*time.Hour) {
+				err = os.Remove(path.Join(car.conn.BasePath, file.Name()))
+				if err != nil {
+					return
+				}
+			}
+		}
+	}
+	return
 }
 
 // Close the diskv client connection
