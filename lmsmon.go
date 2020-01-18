@@ -776,14 +776,14 @@ func (ls *LMSServer) cacheImage() error {
 // VolumePopup - visualize volume change - a la Ubuntu desktop ;)
 func (ls *LMSServer) VolumePopup(sw, sh int) (img draw.Image) {
 
-	w, h := 80, 80
-
 	img = image.NewRGBA(image.Rect(0, 0, sw, sh))
 
 	if ls.volviz {
-		var iconMem = new(bytes.Buffer)
 
+		var iconMem = new(bytes.Buffer)
 		var canvas = svg.New(iconMem)
+
+		w, h := 90, 90
 		canvas.Start(w, h)
 
 		canvas.Group(`style="stroke:linen;stroke-width:0.2;fill-opacity:0.8;"`)
@@ -800,23 +800,32 @@ func (ls *LMSServer) VolumePopup(sw, sh int) (img draw.Image) {
 		case ls.Player.Volume <= 10:
 			opacity = [5]string{"0.2", "0.2", "0.2", "0.2", "0"}
 		case ls.Player.Volume <= 20:
-			opacity = [5]string{"1", "0.2", "0.2", "0.2", "0"}
+			opacity = [5]string{"0.9", "0.2", "0.2", "0.2", "0"}
 		case ls.Player.Volume <= 40:
-			opacity = [5]string{"1", "1", "0.2", "0.2", "0"}
+			opacity = [5]string{"0.9", "0.9", "0.2", "0.2", "0"}
 		case ls.Player.Volume <= 80:
-			opacity = [5]string{"1", "1", "1", "0.2", "0"}
+			opacity = [5]string{"0.9", "0.9", "0.9", "0.2", "0"}
 		case ls.Player.Volume <= 100:
-			opacity = [5]string{"1", "1", "1", "1", "0"}
+			opacity = [5]string{"0.9", "0.9", "0.9", "0.9", "0"}
 		}
 
 		// cone
-		canvas.Path(`m9.44252,25.5513l0,17.8031l10.13487,0l15.17187,12.45947l0.00902,-42.72203l-15.17412,12.45947l-10.14163,0l-0.00001,-0.00001z`,
-			`style="fill:palegoldenrod;"`)
+		canvas.Path(`m35.41333,44.18772l0,5.86667c0,1.76 -0.78222,3.12889 -2.15111,3.71556c-0.39111,0.19556 -0.58667,0.19556 -0.97778,0.19556c-0.78222,0 -1.56444,-0.39111 -2.15111,-0.97778l-8.8,-9.77778l-5.67111,0c-3.32444,0 -6.06222,-2.73778 -6.06222,-6.06222l0,-5.86667c0,-3.32444 2.73778,-6.06222 6.06222,-6.06222l5.67111,0l8.8,-9.77778c0.78222,-0.97778 1.95556,-1.17333 3.12889,-0.78222c1.36889,0.58667 2.15111,1.95556 2.15111,3.71556l0,6.06222l0,19.7511z`,
+			`style="fill:palegoldenrod;fill-opacity:0.4;stroke:red;stroke-width:0.2"`)
+		canvas.Path(`m31.69775,24.82771l0,-4.88889l-7.82222,8.8c-0.39111,0.39111 -0.97778,0.58667 -1.36889,0.58667l-6.84444,0c-1.17333,0 -2.15111,0.97778 -2.15111,2.15111l0,5.86667c0,1.17333 0.97778,2.15111 2.15111,2.15111l4.49778,0l0,-4.69333c0,-1.17333 0.78222,-1.95556 1.95556,-1.95556c0.97778,0 1.95556,0.78222 1.95556,1.95556l0,5.86667l7.43111,8.21333l0,-4.69333c0,-1.17333 0.97778,-1.95556 1.95556,-1.95556s1.95556,0.78222 1.95556,1.95556l0,5.86667c0,1.76 -0.78222,3.12889 -2.15111,3.71556c-0.39111,0.19556 -0.58667,0.19556 -0.97778,0.19556c-0.78222,0 -1.56444,-0.39111 -2.15111,-0.97778l-8.8,-9.77778l-5.67111,0c-3.32444,0 -6.06222,-2.73778 -6.06222,-6.06222l0,-5.86667c0,-3.32444 2.73778,-6.06222 6.06222,-6.06222l5.67111,0l8.8,-9.77778c0.78222,-0.97778 1.95556,-1.17333 3.12889,-0.78222c1.36889,0.58667 2.15111,1.95556 2.15111,3.71556l0,6.06222c0,0.97778 -0.97778,1.95556 -1.95556,1.95556s-1.76,-0.39111 -1.76,-1.56444l-0.00002,-0.00003z`,
+			`style="fill:palegoldenrod;fill-opacity:0.5;"`)
+		canvas.Path(`m33.6533,39.49776c-1.17333,0 -1.95556,-0.78222 -1.95556,-1.95556s0.78222,-1.95556 1.95556,-1.95556c0.78222,0 1.36889,-0.58667 1.36889,-1.36889s-0.58667,-1.36889 -1.36889,-1.36889c-1.17333,0 -1.95556,-0.78222 -1.95556,-1.95556s0.78222,-1.95556 1.95556,-1.95556c2.93333,0 5.28,2.34667 5.28,5.28s-2.54222,5.28 -5.28,5.28l0,0.00002z`,
+			`style="fill:palegoldenrod;fill-opacity:0.9;"`)
 
 		// volume bars
 		for el := 0; el < 4; el++ {
-			canvas.Line(42+(el*8), 29-(el*4), 42+(el*8), 39+(el*4),
-				fmt.Sprintf("style=\"fill:none;stroke:palegoldenrod;stroke-width:3.5;stroke-linecap:round;stroke-opacity:%s;\"", opacity[el]))
+			qx1 := 41 + (el * 7)
+			qy1 := 29 - (el * 4)
+			qy2 := 39 + (el * 4)
+			qmx := qx1 + ((el + 1) * 3)
+			qmy := float64(qy1 + ((qy2 - qy1) / 2))
+			canvas.Path(fmt.Sprintf("m%[1]d,%[2]dQ%[4]d,%[5]f %[1]d,%[3]d", qx1, qy1, qy2, qmx, qmy),
+				fmt.Sprintf("style=\"fill:none;stroke:palegoldenrod;stroke-width:2;stroke-linecap:round;stroke-opacity:%s;\"", opacity[el]))
 		}
 
 		// mute

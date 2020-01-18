@@ -528,8 +528,8 @@ func main() {
 			}
 			dc.SetHexColor("#0099ffcc")
 			dc.DrawStringAnchored(lms.Player.Bitty, float64(W/2), base, 0.5, 0.5)
-
-			dc.DrawImageAnchored(lms.VolumePopup(50, 50), int(wf/2), int(hf/4), .5, .5)
+			base = 0.390625 * wf
+			dc.DrawImageAnchored(lms.VolumePopup(int(base), int(base)), int(wf/2), int(hf/4), .5, .5)
 
 		} else if transit.Display {
 			pinClockTop(dc)
