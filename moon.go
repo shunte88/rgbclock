@@ -15,52 +15,41 @@ import (
 
 // Moon calculations
 type Moon struct {
-	phase       float64
-	illum       float64
-	age         float64
-	dist        float64
-	angdia      float64
-	sundist     float64
-	sunangdia   float64
-	pdata       float64
-	quarters    [8]float64
-	timespace   float64
-	azimuth     float64
-	altitude    float64
-	distance    float64
-	e           float64
-	stCoef0Nano int64
-	stCoef1Nano int64
-	rad         float64
-	daySec      int64
-	halfDaySec  int64
-	halfDayNano int64
-	j1970       int64
-	j2000       int64
+	phase     float64
+	illum     float64
+	age       float64
+	dist      float64
+	angdia    float64
+	sundist   float64
+	sunangdia float64
+	pdata     float64
+	quarters  [8]float64
+	timespace float64
+	azimuth   float64
+	altitude  float64
+	distance  float64
 }
 
-type JulianDate struct {
-	julianDayNumber int64
-	time            int64 //nanoseconds since the beginning of the day
-}
+const millyToNano = 1000000
+const dayMs = 1000 * 60 * 60 * 24
+const J1970 = 2440588
+const J2000 = 2451545
 
-var synmonth float64 = 29.53058868 // Synodic month (new Moon to new Moon)
+func timeToUnixMillis(date time.Time) int64   { return int64(float64(date.UnixNano()) / millyToNano) }
+func unixMillisToTime(date float64) time.Time { return time.Unix(0, int64(date*millyToNano)) }
+func toJulian(date time.Time) float64         { return float64(timeToUnixMillis(date))/dayMs - 0.5 + J1970 }
+func fromJulian(j float64) time.Time          { return unixMillisToTime((j + 0.5 - J1970) * dayMs) }
+func toDays(date time.Time) float64           { return toJulian(date) - J2000 }
+
+// general calculations for position
+const rad = math.Pi / 180
+const e = rad * 23.4397              // obliquity of the Earth
+const synmonth float64 = 29.53058868 // Synodic month (new Moon to new Moon)
 
 // NewLuna creates an instance of the Luna impl. develops math - DOEST NOT INCLUDE OBSERVATION POINT!
 func NewLuna(t time.Time, lat, lng float64) (moonP *Moon) {
 
 	moonP = new(Moon)
-
-	moonP.rad = math.Pi / 180.0
-	moonP.e = moonP.rad * 23.4397 // obliquity of the Earth
-	moonP.stCoef0Nano = 28016 * 1e7
-	moonP.stCoef1Nano = 3609856235 * 100
-
-	moonP.daySec = 60 * 60 * 24
-	moonP.halfDaySec = 60 * 60 * 12
-	moonP.halfDayNano = 1e9 * 60 * 60 * 12
-	moonP.j1970 = 2440588
-	moonP.j2000 = 2451545
 
 	// Astronomical constants
 	var epoch float64 = 2444238.5 // 1989 January 0.0
@@ -135,23 +124,21 @@ func NewLuna(t time.Time, lat, lng float64) (moonP *Moon) {
 }
 
 func (m *Moon) rightAscension(l, b float64) float64 {
-	return math.Atan2(sin(l)*cos(m.e)-math.Tan(b)*sin(m.e), cos(l))
+	return math.Atan2(sin(l)*cos(e)-math.Tan(b)*sin(e), cos(l))
 }
 
 func (m *Moon) declination(l, b float64) float64 {
-	return math.Asin(sin(b)*cos(m.e) + cos(b)*sin(m.e)*sin(l))
+	return math.Asin(sin(b)*cos(e) + cos(b)*sin(e)*sin(l))
 }
 
-func (m *Moon) moonCoords(jd JulianDate) (dec, ra, dist float64) { // geocentric ecliptic coordinates of the moon
+func (m *Moon) moonCoords(d float64) (dec, ra, dist float64) { // geocentric ecliptic coordinates of the moon
 
-	d := float64(jd.julianDayNumber) + float64(jd.time)/(1e9*float64(m.daySec))
+	L := rad * (218.316 + 13.176396*d) // ecliptic longitude
+	M := rad * (134.963 + 13.064993*d) // mean anomaly
+	F := rad * (93.272 + 13.229350*d)  // mean distance
 
-	L := m.rad * (218.316 + 13.176396*d) // ecliptic longitude
-	M := m.rad * (134.963 + 13.064993*d) // mean anomaly
-	F := m.rad * (93.272 + 13.229350*d)  // mean distance
-
-	l := L + m.rad*6.289*sin(M) // longitude
-	b := m.rad * 5.128 * sin(F) // latitude
+	l := L + rad*6.289*sin(M)   // longitude
+	b := rad * 5.128 * sin(F)   // latitude
 	dt := 385001 - 20905*cos(M) // distance to the moon in km
 
 	ra = m.rightAscension(l, b)
@@ -160,14 +147,7 @@ func (m *Moon) moonCoords(jd JulianDate) (dec, ra, dist float64) { // geocentric
 	return
 }
 
-func (m *Moon) siderealTime(d JulianDate, lw float64) float64 {
-	i := (int64(m.stCoef0Nano) + d.julianDayNumber*m.stCoef1Nano) % (360 * 1e9)
-	st := m.rad*(float64(i)/1e9+float64(d.time)/float64(m.daySec)*(float64(m.stCoef1Nano)/1e18)) - lw
-	if st < 0 {
-		st = st + 2*math.Pi
-	}
-	return st
-}
+func (m *Moon) siderealTime(d float64, lw float64) float64 { return rad*(280.16+360.9856235*d) - lw }
 
 func (m *Moon) calcAzimuth(H, phi, dec float64) float64 {
 	return math.Atan2(sin(H), cos(H)*sin(phi)-math.Tan(dec)*cos(phi))
@@ -176,38 +156,20 @@ func (m *Moon) calcAltitude(H, phi, dec float64) float64 {
 	return math.Asin(sin(phi)*sin(dec) + cos(phi)*cos(dec)*cos(H))
 }
 
-// NewJulian creates a new JulianDate from a time.Time
-func NewJulian(t time.Time) JulianDate {
-	var daySec int64 = 60 * 60 * 24
-	d1970, secs := integerDivide(t.Unix(), daySec)
-	j := d1970 + 2440588 // j1970
-	jdn := JulianDate{
-		julianDayNumber: j,
-		time:            secs*1e9 + int64(t.Nanosecond()),
-	}
-	jdn.removeHalfDay()
-	return jdn
+func astroRefraction(h float64) float64 {
+	if h < 0.0 {
+		h = 0 // if h = -0.08901179 a div/0 would occur.
+	} // the following formula works for positive altitudes only.
+
+	// formula 16.4 of "Astronomical Algorithms" 2nd edition by Jean Meeus (Willmann-Bell, Richmond) 1998.
+	// 1.02 / tan(h + 10.26 / (h + 5.10)) h in degrees, result in arc minutes -> converted to rad:
+	return 0.0002967 / math.Tan(h+0.00312536/(h+0.08901179))
 }
 
-func (j *JulianDate) removeHalfDay() {
-	var halfDayNano int64 = 1e9 * 60 * 60 * 12
-	if j.time < halfDayNano {
-		j.time = j.time + halfDayNano
-		j.julianDayNumber = j.julianDayNumber - 1
-	} else {
-		j.time = j.time - halfDayNano
-	}
-}
-
-func toDays(t time.Time) JulianDate {
-	jdn := NewJulian(t)
-	jdn.julianDayNumber = jdn.julianDayNumber - 2451545 // j2000
-	return jdn
-}
 func (m *Moon) getMoonPosition(date time.Time, lat, lng float64) {
 
-	lw := m.rad * -lng
-	phi := m.rad * lat
+	lw := rad * -lng
+	phi := rad * lat
 	d := toDays(date)
 
 	dec, ra, distance := m.moonCoords(d)
@@ -215,7 +177,7 @@ func (m *Moon) getMoonPosition(date time.Time, lat, lng float64) {
 	h := m.calcAltitude(H, phi, dec)
 
 	// altitude correction for refraction
-	h = h + m.rad*0.017/math.Tan(h+m.rad*10.26/(h+m.rad*5.10))
+	h = astroRefraction(h) // h + rad*0.017/math.Tan(h+rad*10.26/(h+rad*5.10))
 
 	m.azimuth = rad2deg(m.calcAzimuth(H, phi, dec))
 	m.altitude = h
@@ -531,7 +493,7 @@ func (m *Moon) PhaseIcon(sw, sh int) (img draw.Image, err error) {
 	canvas.Fend()
 	canvas.DefEnd()
 
-	//canvas.Group(fmt.Sprintf("transform=\"rotate(%f 120 120)\"", m.azimuth))
+	canvas.Group(fmt.Sprintf("transform=\"rotate(%f %v %v)\"", m.azimuth, w/2, h/2))
 	canvas.Group()
 
 	pos1 := `m120,9.5`
@@ -548,12 +510,11 @@ func (m *Moon) PhaseIcon(sw, sh int) (img draw.Image, err error) {
 
 	canvas.Circle(70, 70, 26, `style="fill:#c3e5e0;fill-opacity:0.5;"`)
 	res := 0.4
-	if m.phase > 0.6 && m.phase < 0.8 {
+	if m.phase > 0.6 && m.phase < 0.9 {
 		res = 0.2
 	}
 	canvas.Path(`m108.27516,210.81657c-1.3504,-10.80513 -6.44946,-11.24919 -18.12884,-16.03732c14.56598,-3.74255 18.02777,-12.64935 12.08516,-23.48683c7.46002,7.73173 14.19221,5.508 22.80197,-8.00359c-5.21947,18.38783 8.57644,22.84642 25.6544,23.38799c-18.60823,6.15093 -23.01136,14.62107 -17.60719,25.04577c-8.50439,-5.66703 -16.28758,-10.25844 -24.80548,-0.90601l-0.00003,0z`,
 		fmt.Sprintf("style=\"fill:#c3e5e0;fill-opacity:%f;\"", res))
-	//canvas.Path(db, `style="fill:cyan;fill-opacity:0.1;filter:url(#blur_z);"`)
 
 	canvas.Path(`m128.24406,50.28232c-1.34797,-4.04392 -10.42974,-13.49112 -15.13146,-15.05835c-0.70533,-0.23513 -1.67472,-0.294 -2.92395,-0.21929l0.00012,0c-8.74459,0.52283 -28.86279,7.88339 -32.60208,11.62271c-3.44359,6.13418 -16.05388,15.40858 -18.7864,8.33326c5.00726,-9.49068 8.30148,-14.63581 -10.08763,-10.23383c-13.76045,12.53045 -24.2873,28.53001 -30.18981,46.63706c2.03709,4.44953 1.80735,8.09324 2.41226,10.59934c5.26264,12.40651 0.10338,27.78371 9.35665,36.54941c9.53111,0.17742 8.42476,3.74726 30.55531,3.65494c5.37191,10.7438 -11.12965,14.32599 -7.74848,27.85066c0.43427,1.7371 10.17385,1.40086 12.06131,1.02338c14.02014,-2.80405 6.95739,5.59366 15.47131,7.72214c7.78658,1.94666 12.5189,-12.64263 29.5101,-6.08451c4.28943,-2.85962 -0.75579,-13.5502 -1.70692,-16.40359c-1.83748,-5.51245 3.59325,-17.59399 2.33917,-20.10218c-7.05987,-6.75171 -15.02222,-10.03067 -15.78935,-20.46766c4.75418,-1.86567 9.77763,-2.40728 13.52328,-2.48537c7.79315,-1.55862 -0.73961,-15.35075 8.84497,-15.35075c8.89123,-1.5066 32.49506,5.38301 26.27644,-8.10498c-3.18056,-5.30097 -5.7018,-7.82658 -12.75384,-7.58946c-6.50226,-0.33698 -13.68906,13.52927 -18.12783,8.38456c-9.61082,-6.36477 -20.56831,4.94759 -31.82363,11.03409c-10.32845,-3.18729 -13.36361,-4.14546 -15.03283,-10.74169c5.25304,-5.02206 7.68763,-5.74048 19.3712,-4.67832c5.02433,-0.87899 10.09211,1.75259 15.13146,0.65789c10.54214,-7.2202 21.95662,-9.37039 28.28925,-19.225c2.35979,-5.67731 1.44409,-11.38577 -0.4386,-17.32443l-0.00003,-0.00001zm24.12261,34.57575c1.86193,0 10.32736,-0.47088 11.03792,0.95029c0.89778,1.79554 -17.14001,18.37328 -3.36254,27.55826c2.07507,1.38339 6.13371,2.69804 7.74848,4.31283c-2.38508,20.69419 0.58991,15.32538 6.72509,26.82726c1.4599,2.91979 0.05028,5.52113 1.97366,8.40637c7.86555,11.79832 12.5012,-5.11042 11.11103,-12.06131c-2.32274,-11.61377 -15.80598,4.54151 -15.80598,-13.06805c0,-15.67188 22.82347,-5.11245 22.82347,-20.11881c-7.57119,-0.56495 -1.4425,-12.99641 -3.65494,-15.78935c-2.91191,-13.73771 -12.06507,-13.27288 -22.81065,-8.69495c-0.54537,-7.75473 0.02667,-21.13721 -6.72127,-26.17319c-14.21843,2.79132 -17.41507,-13.24312 -27.04657,4.75143c-3.62162,11.80164 8.85476,22.84174 17.98231,23.09923zm-93.45234,14.4949c-0.64363,3.1706 -4.2577,5.7968 -7.06581,4.65774c-4.20162,-1.70429 -5.21488,-7.2936 -2.12415,-9.63373c3.63306,-2.75076 9.71541,2.38767 9.18996,4.97598l0,0.00001z`, `style="fill:#3b5450;fill-opacity:0.4;"`)
 	canvas.Path(`m201.66117,88.85941c2.17407,4.3481 7.51488,12.33959 14.08492,9.05458c5.81756,-8.85652 -3.88549,-17.34894 -9.22227,-19.78592c-2.85099,0.53024 -6.05085,7.92571 -4.86265,10.73135z`, `style="fill:#3b5450;fill-opacity:0.4;"`)
@@ -563,6 +524,10 @@ func (m *Moon) PhaseIcon(sw, sh int) (img draw.Image, err error) {
 	canvas.Gend()
 
 	canvas.Path(db, `style="fill:cyan;fill-opacity:0.05;filter:url(#blur_z);"`)
+	canvas.Path(d, `style="fill:white;fill-opacity:0.1;filter:url(#blur_z);"`)
+	canvas.Path(d, `style="fill:paleturquoise;fill-opacity:0.1;filter:url(#blur_z);"`)
+
+	canvas.Gend()
 
 	canvas.End()
 

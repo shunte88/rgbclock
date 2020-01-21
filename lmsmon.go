@@ -783,12 +783,12 @@ func (ls *LMSServer) VolumePopup(sw, sh int) (img draw.Image) {
 		var iconMem = new(bytes.Buffer)
 		var canvas = svg.New(iconMem)
 
-		w, h := 90, 90
+		w, h := 80, 80
 		canvas.Start(w, h)
 
 		canvas.Group(`style="stroke:linen;stroke-width:0.2;fill-opacity:0.8;"`)
-		canvas.Roundrect(5, 5, 70, 70, 6, 6, `style="fill:steelblue;"`)
-		canvas.Roundrect(7, 7, 66, 66, 5, 5, `style="fill:none;"`)
+		canvas.Roundrect(5, 5, w-10, h-10, 6, 6, `style="fill:steelblue;"`)
+		canvas.Roundrect(7, 7, w-14, h-14, 5, 5, `style="fill:none;"`)
 		canvas.Gend()
 
 		canvas.Group()
@@ -796,22 +796,22 @@ func (ls *LMSServer) VolumePopup(sw, sh int) (img draw.Image) {
 		var opacity [5]string
 		switch {
 		case ls.Player.Volume == 0:
-			opacity = [5]string{"0.2", "0.2", "0.2", "0.2", "1"}
+			opacity = [5]string{"0.2", "0.2", "0.2", "0.2", "1"} // mute
 		case ls.Player.Volume <= 10:
-			opacity = [5]string{"0.2", "0.2", "0.2", "0.2", "0"}
+			opacity = [5]string{"0.2", "0.2", "0.2", "0.2", "0"} // lowest volume
 		case ls.Player.Volume <= 20:
-			opacity = [5]string{"0.9", "0.2", "0.2", "0.2", "0"}
+			opacity = [5]string{"0.9", "0.2", "0.2", "0.2", "0"} // one "bar"
 		case ls.Player.Volume <= 40:
-			opacity = [5]string{"0.9", "0.9", "0.2", "0.2", "0"}
+			opacity = [5]string{"0.9", "0.9", "0.2", "0.2", "0"} // two "bars"
 		case ls.Player.Volume <= 80:
-			opacity = [5]string{"0.9", "0.9", "0.9", "0.2", "0"}
+			opacity = [5]string{"0.9", "0.9", "0.9", "0.2", "0"} // three "bars"
 		case ls.Player.Volume <= 100:
-			opacity = [5]string{"0.9", "0.9", "0.9", "0.9", "0"}
+			opacity = [5]string{"0.9", "0.9", "0.9", "0.9", "0"} // highest volume - four "bars"
 		}
 
 		// cone
 		canvas.Path(`m35.41333,44.18772l0,5.86667c0,1.76 -0.78222,3.12889 -2.15111,3.71556c-0.39111,0.19556 -0.58667,0.19556 -0.97778,0.19556c-0.78222,0 -1.56444,-0.39111 -2.15111,-0.97778l-8.8,-9.77778l-5.67111,0c-3.32444,0 -6.06222,-2.73778 -6.06222,-6.06222l0,-5.86667c0,-3.32444 2.73778,-6.06222 6.06222,-6.06222l5.67111,0l8.8,-9.77778c0.78222,-0.97778 1.95556,-1.17333 3.12889,-0.78222c1.36889,0.58667 2.15111,1.95556 2.15111,3.71556l0,6.06222l0,19.7511z`,
-			`style="fill:palegoldenrod;fill-opacity:0.4;stroke:red;stroke-width:0.2"`)
+			`style="fill:navajowhite;fill-opacity:0.4;stroke:red;stroke-width:0.2"`)
 		canvas.Path(`m31.69775,24.82771l0,-4.88889l-7.82222,8.8c-0.39111,0.39111 -0.97778,0.58667 -1.36889,0.58667l-6.84444,0c-1.17333,0 -2.15111,0.97778 -2.15111,2.15111l0,5.86667c0,1.17333 0.97778,2.15111 2.15111,2.15111l4.49778,0l0,-4.69333c0,-1.17333 0.78222,-1.95556 1.95556,-1.95556c0.97778,0 1.95556,0.78222 1.95556,1.95556l0,5.86667l7.43111,8.21333l0,-4.69333c0,-1.17333 0.97778,-1.95556 1.95556,-1.95556s1.95556,0.78222 1.95556,1.95556l0,5.86667c0,1.76 -0.78222,3.12889 -2.15111,3.71556c-0.39111,0.19556 -0.58667,0.19556 -0.97778,0.19556c-0.78222,0 -1.56444,-0.39111 -2.15111,-0.97778l-8.8,-9.77778l-5.67111,0c-3.32444,0 -6.06222,-2.73778 -6.06222,-6.06222l0,-5.86667c0,-3.32444 2.73778,-6.06222 6.06222,-6.06222l5.67111,0l8.8,-9.77778c0.78222,-0.97778 1.95556,-1.17333 3.12889,-0.78222c1.36889,0.58667 2.15111,1.95556 2.15111,3.71556l0,6.06222c0,0.97778 -0.97778,1.95556 -1.95556,1.95556s-1.76,-0.39111 -1.76,-1.56444l-0.00002,-0.00003z`,
 			`style="fill:palegoldenrod;fill-opacity:0.5;"`)
 		canvas.Path(`m33.6533,39.49776c-1.17333,0 -1.95556,-0.78222 -1.95556,-1.95556s0.78222,-1.95556 1.95556,-1.95556c0.78222,0 1.36889,-0.58667 1.36889,-1.36889s-0.58667,-1.36889 -1.36889,-1.36889c-1.17333,0 -1.95556,-0.78222 -1.95556,-1.95556s0.78222,-1.95556 1.95556,-1.95556c2.93333,0 5.28,2.34667 5.28,5.28s-2.54222,5.28 -5.28,5.28l0,0.00002z`,
@@ -819,12 +819,12 @@ func (ls *LMSServer) VolumePopup(sw, sh int) (img draw.Image) {
 
 		// volume bars
 		for el := 0; el < 4; el++ {
-			qx1 := 41 + (el * 7)
+			qx1 := 41 + (el * 6)
 			qy1 := 29 - (el * 4)
 			qy2 := 39 + (el * 4)
-			qmx := qx1 + ((el + 1) * 3)
+			qmx := float64(qx1) + float64(el+1)*3
 			qmy := float64(qy1 + ((qy2 - qy1) / 2))
-			canvas.Path(fmt.Sprintf("m%[1]d,%[2]dQ%[4]d,%[5]f %[1]d,%[3]d", qx1, qy1, qy2, qmx, qmy),
+			canvas.Path(fmt.Sprintf("m%[1]d,%[2]dQ%[4]f,%[5]f %[1]d,%[3]d", qx1, qy1, qy2, qmx, qmy),
 				fmt.Sprintf("style=\"fill:none;stroke:palegoldenrod;stroke-width:2;stroke-linecap:round;stroke-opacity:%s;\"", opacity[el]))
 		}
 
@@ -835,10 +835,10 @@ func (ls *LMSServer) VolumePopup(sw, sh int) (img draw.Image) {
 		canvas.Gend()
 
 		canvas.Group()
-		canvas.Line(12, 68, 68, 68, `style="stroke-opacity:0.8;stroke-width:4.5;stroke:black;stroke-linecap:round"`)
+		canvas.Line(12, h-12, w-12, h-12, `style="stroke-opacity:0.8;stroke-width:4.5;stroke:black;stroke-linecap:round"`)
 		if ls.Player.Volume > 0 {
-			x2 := int(float64(68-12) * (float64(ls.Player.Volume) / 100.00))
-			canvas.Line(12, 68, 12+x2, 68, `style="stroke-opacity:0.9;stroke-width:4.1;stroke:linen;stroke-linecap:round"`)
+			x2 := int(float64((w-12)-12) * (float64(ls.Player.Volume) / 100.00))
+			canvas.Line(12, h-12, 12+x2, h-12, `style="stroke-opacity:0.9;stroke-width:4.1;stroke:linen;stroke-linecap:round"`)
 		}
 		canvas.Gend()
 
