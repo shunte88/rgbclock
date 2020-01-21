@@ -29,6 +29,8 @@ import (
 var idx = []int{0, 1, 2, 3}
 var capture = false
 var base string
+var lat float64
+var lng float64
 
 func init() {
 
@@ -96,6 +98,9 @@ func init() {
 	wiScale = viper.GetFloat64(layout + ".icon.wind.scale")
 
 	iconStyle = viper.GetString(layout + ".style")
+
+	lat = viper.GetFloat64("moon.lat")
+	lng = viper.GetFloat64("moon.lng")
 
 	feeds := viper.Get("feeds").([]interface{})
 	newsDetail := viper.GetBool("news.detail")
@@ -168,6 +173,9 @@ func init() {
 		activeDays = viper.GetIntSlice("transport.days") // 0=Sunday
 
 		transit.SetActiveHours(activeFrom, activeUntil, activeDays)
+
+		lat = viper.GetFloat64("moon.lat")
+		lng = viper.GetFloat64("moon.lng")
 
 	})
 
@@ -459,7 +467,7 @@ func main() {
 			dc.DrawStringAnchored(temps[idx[1]], 3*(wf/4), dpos, 0.5, 0.5)
 
 			mx := int(wf * 0.171875)
-			moonI, err := NewLuna(t, 42.365250, -71.105011).PhaseIcon(mx, mx)
+			moonI, err := NewLuna(t, lat, lng).PhaseIcon(mx, mx)
 			if err == nil && moonI != nil {
 				dc.DrawImageAnchored(moonI, int(3*(wf/4))+2, int(3*(hf/4))+2, .5, .5)
 			}
