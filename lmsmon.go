@@ -503,11 +503,13 @@ func (ls *LMSServer) updatePlayer() {
 					ls.Player.Title.SetText(title)
 					ls.Player.Composer.SetText(``)
 					ls.Player.Conductor.SetText(``)
+					ls.Player.Album.SetText(title)
 					ls.Player.Year = s.RemoteMeta.Year
 					ls.Player.Genre = s.RemoteMeta.Genre
 					ls.Player.coverid = s.RemoteMeta.Coverid
-					//fmt.Printf("%v\n", s.RemoteMeta.Coverid)
-					//fmt.Printf("%v\n", s.RemoteMeta.URL)
+					ls.Player.Bitrate = s.RemoteMeta.Bitrate
+					ls.Player.Bitty = fmt.Sprintf("• %v •", ls.Player.Bitrate)
+
 				} else {
 					artist := s.PlaylistLoop[0].Artist
 					if artist == `` {
