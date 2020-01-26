@@ -825,7 +825,7 @@ func (ls *LMSServer) VolumePopup(sw, sh int) (img draw.Image) {
 			qmx := float64(qx1) + float64(el+1)*3
 			qmy := float64(qy1 + ((qy2 - qy1) / 2))
 			canvas.Path(fmt.Sprintf("m%[1]d,%[2]dQ%[4]f,%[5]f %[1]d,%[3]d", qx1, qy1, qy2, qmx, qmy),
-				fmt.Sprintf("style=\"fill:none;stroke:palegoldenrod;stroke-width:2;stroke-linecap:round;stroke-opacity:%s;\"", opacity[el]))
+				fmt.Sprintf("style=\"fill:none;stroke:palegoldenrod;stroke-width:2.2;stroke-linecap:round;stroke-opacity:%s;\"", opacity[el]))
 		}
 
 		// mute

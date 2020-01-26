@@ -69,10 +69,11 @@ var (
 	imPrecip    iconCache
 	imSnow      iconCache
 	imHumid     iconCache
+	imThermo    iconCache
 	fontfile           = `font/LCDM2B__.TTF`
 	fontfile2          = `font/Roboto-Thin.ttf`
 	lastHorizon        = ``
-	daymode            = daylight{20, false}
+	daymode            = daylight{0, false}
 	colorgrad1  string = `#56ccf240`
 	colorgrad2  string = `#2f80ed40`
 	sunrise            = time.Now()

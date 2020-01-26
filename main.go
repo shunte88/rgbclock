@@ -445,11 +445,16 @@ func main() {
 		dc.SetFontFace(sface)
 		if !mode {
 			dc.SetHexColor("#0099ff")
-			dc.DrawStringAnchored(temps[0], wf/2, hf*0.2, 0.5, 0.5)
+			wdy := float64(0.27 * hf)
+			dc.DrawStringAnchored(fmt.Sprintf("%v", math.Round(w.Current.tempF)), 8+(wf*.25), wdy, .5, 0.5)
+			if imThermo.image != nil {
+				dc.DrawImageAnchored(imThermo.image, int(cx), 4+int(wdy), 0.5, 0.5)
+			}
 		}
 		dc.SetHexColor("#66ff99")
 		if !mode {
-			dc.DrawStringAnchored(temps[1], wf/2, hf*0.32, 0.5, 0.5)
+			wdy := float64(0.27 * hf)
+			dc.DrawStringAnchored(fmt.Sprintf("%v", math.Round(w.Current.tempC)), -8+(wf*.75), wdy, .5, 0.5)
 		} else {
 			dc.DrawStringAnchored(temps[1], wf/3, hf*0.27, 0.5, 0.5)
 		}

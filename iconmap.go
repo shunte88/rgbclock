@@ -12,19 +12,25 @@ type SVG struct {
 	Doc    string `xml:",innerxml"`
 }
 
+// day/night alternates - if set we chose based on dusk-dawn window
+type noctuque struct {
+	day   string
+	night string
+}
+
 type icon struct {
-	filename      string
-	nightfilename string // if set we chose based on dusk-dawn window - simply swap into filename
-	asis          bool
-	color         string
-	scale         float64
-	rotate        float64
-	alpha         float64
-	width         int
-	height        int
-	shadow        bool
-	blur          bool
-	popcolor      string
+	filename string
+	modal    noctuque // day/night alternates - if set we chose based on dusk-dawn window
+	asis     bool
+	color    string
+	scale    float64
+	rotate   float64
+	alpha    float64
+	width    int
+	height   int
+	shadow   bool
+	blur     bool
+	popcolor string
 }
 
 var iconMap map[string]icon
@@ -33,54 +39,57 @@ func mapInit() {
 	windDegAsIs := true
 	// configured miScale is based on a 30x30 viewport, adjust for asis svg setups - see wic-rain for example
 	im := map[string]icon{
-		"icon-0":            icon{filename: "wic-tornado", asis: true, color: "red", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                     // tornado
-		"icon-1":            icon{filename: "wic-tornado", asis: true, color: "red", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                     // tropical storm
-		"icon-2":            icon{filename: "wic-hurricane", asis: true, color: "red", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                   // hurricane
-		"icon-3":            icon{filename: "wic-thunderstorm", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                              // severe thunderstorms
-		"icon-4":            icon{filename: "wic-lightning", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                 // thunderstorms
-		"icon-5":            icon{filename: "wic-rain-mix", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                  // mixed rain and snow
-		"icon-6":            icon{filename: "wic-rain-mix", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                  // mixed rain and sleet
-		"icon-7":            icon{filename: "wic-day-sleet-storm", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 3, shadow: true},                           // mixed snow and sleet
-		"icon-8":            icon{filename: "wic-day-sleet", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                 // freezing drizzle
-		"icon-9":            icon{filename: "wic-sprinkle", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                  // drizzle
-		"icon-10":           icon{filename: "wic-rain-wind", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                 // freezing rain
-		"icon-11":           icon{filename: "wic-sprinkle", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                  // light rain
-		"icon-12":           icon{filename: "wic-rain", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                      // heavy rain
-		"icon-13":           icon{filename: "wic-day-snow-wind", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                             // snow flurries
-		"icon-14":           icon{filename: "wic-day-snow", nightfilename: `wic-night-snow`, asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true}, // light snow showers
-		"icon-15":           icon{filename: "wic-snow-wind", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                 // blowing snow
-		"icon-16":           icon{filename: "wic-snow", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                      // snow
-		"icon-17":           icon{filename: "wic-day-hail", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                  // hail
-		"icon-18":           icon{filename: "wic-sleet", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                     // sleet
-		"icon-19":           icon{filename: "wic-dust", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                      // dust
-		"icon-20":           icon{filename: "wic-fog", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                       // foggy
-		"icon-21":           icon{filename: "wic-day-haze", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                  // haze
-		"icon-22":           icon{filename: "wic-smoke", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                     // smoky
-		"icon-23":           icon{filename: "wic-windy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                     // blustery
-		"icon-24":           icon{filename: "wic-windy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                     // windy
-		"icon-25":           icon{filename: "wic-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                    // cold
-		"icon-26":           icon{filename: "wic-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                    // cloudy
-		"icon-27":           icon{filename: "wic-night-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                              // mostly cloudy (night)
-		"icon-28":           icon{filename: "wic-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                    // mostly cloudy (day)
-		"icon-29":           icon{filename: "wic-night-partly-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                       // partly cloudy (night)
-		"icon-30":           icon{filename: "wic-day-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                // partly cloudy (day)
-		"icon-31":           icon{filename: "wic-night-clear", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                               // clear (night)
-		"icon-32":           icon{filename: "wic-day-sunny", asis: true, color: "yellow", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true, popcolor: "yellow"},            // sunny
-		"icon-33":           icon{filename: "wic-stars", asis: true, color: "linen", width: 60, height: 60, alpha: .8, scale: miScale / 2, shadow: true},                                          // fair (night)
-		"icon-34":           icon{filename: "wic-day-sunny", asis: true, color: "yellow", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                // fair (day)
-		"icon-35":           icon{filename: "wic-hail", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                      // mixed rain and hail
-		"icon-36":           icon{filename: "wic-hot", asis: true, color: "yellow", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                      // hot
-		"icon-37":           icon{filename: "wic-thunderstorm", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                              // isolated thunderstorms
-		"icon-38":           icon{filename: "wic-storm-showers", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                             // scattered thunderstorms
-		"icon-39":           icon{filename: "wic-rain", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                      // scattered rain
-		"icon-40":           icon{filename: "wic-rain", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                      // heavy rain
-		"icon-41":           icon{filename: "wic-snowflake-cold", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                            // heavy snow
-		"icon-42":           icon{filename: "wic-snow", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                      // scattered snow showers
-		"icon-43":           icon{filename: "wic-snow-wind", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                 // blowing heavy snow
-		"icon-44":           icon{filename: "wic-day-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                // partly cloudy (day)
-		"icon-45":           icon{filename: "wic-night-thunderstorm", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                        // thundershowers (night)
-		"icon-46":           icon{filename: "wic-night-snow", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                // snow showers (night)
-		"icon-47":           icon{filename: "wic-night-thunderstorm", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                        // isolated thundershowers (night)
+		"icon-0":            icon{filename: "wic-tornado", asis: true, color: "red", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                          // tornado
+		"icon-1":            icon{filename: "wic-tornado", asis: true, color: "red", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                          // tropical storm
+		"icon-2":            icon{filename: "wic-hurricane", asis: true, color: "red", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                        // hurricane
+		"icon-3":            icon{filename: "wic-thunderstorm", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                   // severe thunderstorms
+		"icon-4":            icon{filename: "wic-lightning", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                      // thunderstorms
+		"icon-5":            icon{filename: "wic-rain-mix", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                       // mixed rain and snow
+		"icon-6":            icon{filename: "wic-rain-mix", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                       // mixed rain and sleet
+		"icon-7":            icon{filename: "wic-day-sleet-storm", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 3, shadow: true},                                // mixed snow and sleet
+		"icon-8":            icon{filename: "wic-day-sleet", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                      // freezing drizzle
+		"icon-9":            icon{filename: "wic-sprinkle", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                       // drizzle
+		"icon-10":           icon{filename: "wic-rain-wind", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                      // freezing rain
+		"icon-11":           icon{filename: "wic-sprinkle", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                       // light rain
+		"icon-12":           icon{filename: "wic-rain", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                           // heavy rain
+		"icon-13":           icon{filename: "wic-day-snow-wind", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                  // snow flurries
+		"icon-14":           icon{filename: "wic-day-snow", modal: noctuque{night: `icon-14n`}, asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},   // light snow showers
+		"icon-14n":          icon{filename: "wic-night-snow", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                     // light snow showers
+		"icon-15":           icon{filename: "wic-snow-wind", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                      // blowing snow
+		"icon-16":           icon{filename: "wic-snow", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                           // snow
+		"icon-17":           icon{filename: "wic-day-hail", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                       // hail
+		"icon-18":           icon{filename: "wic-sleet", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                          // sleet
+		"icon-19":           icon{filename: "wic-dust", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                           // dust
+		"icon-20":           icon{filename: "wic-fog", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                            // foggy
+		"icon-21":           icon{filename: "wic-day-haze", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                       // haze
+		"icon-22":           icon{filename: "wic-smoke", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                          // smoky
+		"icon-23":           icon{filename: "wic-windy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                          // blustery
+		"icon-24":           icon{filename: "wic-windy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                          // windy
+		"icon-25":           icon{filename: "wic-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                         // cold
+		"icon-26":           icon{filename: "wic-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                         // cloudy
+		"icon-27":           icon{filename: "wic-night-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                   // mostly cloudy (night)
+		"icon-28":           icon{filename: "wic-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                         // mostly cloudy (day)
+		"icon-29":           icon{filename: "wic-night-partly-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                            // partly cloudy (night)
+		"icon-30":           icon{filename: "wic-day-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                     // partly cloudy (day)
+		"icon-31":           icon{filename: "wic-night-clear", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                    // clear (night)
+		"icon-32":           icon{filename: "wic-day-sunny", asis: true, color: "yellow", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true, popcolor: "yellow"},                 // sunny
+		"icon-33":           icon{filename: "wic-stars", modal: noctuque{day: `icon-33d`}, asis: true, color: "linen", width: 60, height: 60, alpha: .8, scale: miScale / 2, shadow: true},             // fair (night)
+		"icon-33d":          icon{filename: "wic-day-sunny-overcast", asis: true, color: "yellow", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                            // fair (night)
+		"icon-34n":          icon{filename: "wic-stars", asis: true, color: "linen", width: 60, height: 60, alpha: .8, scale: miScale / 2, shadow: true},                                               // fair (night)
+		"icon-34":           icon{filename: "wic-day-sunny", modal: noctuque{night: `icon-34n`}, asis: true, color: "yellow", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true}, // fair (day)
+		"icon-35":           icon{filename: "wic-hail", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                           // mixed rain and hail
+		"icon-36":           icon{filename: "wic-hot", asis: true, color: "yellow", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                           // hot
+		"icon-37":           icon{filename: "wic-thunderstorm", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                   // isolated thunderstorms
+		"icon-38":           icon{filename: "wic-storm-showers", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                  // scattered thunderstorms
+		"icon-39":           icon{filename: "wic-rain", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                           // scattered rain
+		"icon-40":           icon{filename: "wic-rain", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                           // heavy rain
+		"icon-41":           icon{filename: "wic-snowflake-cold", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                 // heavy snow
+		"icon-42":           icon{filename: "wic-snow", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                           // scattered snow showers
+		"icon-43":           icon{filename: "wic-snow-wind", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                      // blowing heavy snow
+		"icon-44":           icon{filename: "wic-day-cloudy", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                     // partly cloudy (day)
+		"icon-45":           icon{filename: "wic-night-thunderstorm", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                             // thundershowers (night)
+		"icon-46":           icon{filename: "wic-night-snow", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                                     // snow showers (night)
+		"icon-47":           icon{filename: "wic-night-thunderstorm", asis: true, color: "linen", width: 60, height: 60, alpha: miAlpha, scale: miScale / 2, shadow: true},                             // isolated thundershowers (night)
 		"clock-0":           icon{filename: "wic-time-12", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
 		"clock-1":           icon{filename: "wic-time-1", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
 		"clock-2":           icon{filename: "wic-time-2", asis: true, color: "white", width: 60, height: 60, alpha: 1.0, scale: 1.0},
@@ -180,11 +189,22 @@ func mapInit() {
 }
 
 func getIcon(s string) icon {
+
 	var v icon
 	v, ok := iconMap[s]
-	if ok && v.nightfilename != `` && !daymode.isdaylight {
-		v.filename = v.nightfilename
+
+	if ok && (v.modal.day != `` || v.modal.night != ``) {
+		if !daymode.isdaylight {
+			if v.modal.night != `` {
+				v, _ = iconMap[v.modal.night]
+			}
+		} else {
+			if v.modal.day != `` {
+				v, _ = iconMap[v.modal.day]
+			}
+		}
 	}
+
 	if !ok || !fileExists(iconFile(v)) {
 		fmt.Println("icon missing?", s, v)
 		v = icon{filename: "wic-alien", asis: true, color: "red", width: 60, height: 60, scale: 1, alpha: 1, shadow: false}
