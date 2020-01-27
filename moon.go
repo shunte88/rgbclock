@@ -509,7 +509,7 @@ func (m *Moon) PhaseIcon(sw, sh int) (img draw.Image, err error) {
 	canvas.Group(`style="filter:url(#blur_f);"`)
 
 	res := 0.4
-	if m.phase > 0.5 && m.phase < 1.1 {
+	if (m.phase > 0.65 && m.phase < 1.01) || (m.phase > 0.0 && m.phase < 0.16) {
 		res = 0.2
 	}
 	canvas.Circle(70, 70, 26,

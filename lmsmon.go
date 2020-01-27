@@ -438,6 +438,8 @@ func (ls *LMSServer) Stop() {
 	ls.Player.Stop()
 }
 
+//var fuggle = true
+
 func (ls *LMSServer) updatePlayer() {
 
 	defer func() {
@@ -509,7 +511,10 @@ func (ls *LMSServer) updatePlayer() {
 					ls.Player.coverid = s.RemoteMeta.Coverid
 					ls.Player.Bitrate = s.RemoteMeta.Bitrate
 					ls.Player.Bitty = fmt.Sprintf("• %v •", ls.Player.Bitrate)
-
+					//if fuggle {
+					//	fmt.Printf("%#v", s)
+					//	fuggle = false
+					//}
 				} else {
 					artist := s.PlaylistLoop[0].Artist
 					if artist == `` {
