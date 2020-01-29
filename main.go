@@ -231,24 +231,14 @@ func main() {
 
 	font, err := truetype.Parse(gomonobold.TTF)
 	checkFatal(err)
-	lcdfont := font
-	fb, err := ioutil.ReadFile(fontfile)
-	if nil == err {
-		lcdfont, _ = truetype.Parse(fb)
-	}
+
 	if `` != fontfile2 {
-		fb, err = ioutil.ReadFile(fontfile2)
+		fb, err := ioutil.ReadFile(fontfile2)
 		if nil == err {
 			font, _ = truetype.Parse(fb)
 		}
 	}
 
-	face := truetype.NewFace(lcdfont, &truetype.Options{
-		Size: wf * 0.23,
-	})
-	zface := truetype.NewFace(lcdfont, &truetype.Options{
-		Size: wf * 0.24,
-	})
 	sface := truetype.NewFace(font, &truetype.Options{
 		Size: wf * 0.145,
 	})
@@ -282,6 +272,14 @@ func main() {
 	dc := gg.NewContext(W, H)
 
 	var temps []string
+
+	orangered := `#ff0000` // `#ff4500`
+	darkred := `#660000`
+
+	tm := time.Now()
+	lastTempo := tm.Format(`15 04`)
+	tempo, err := imageTime(tm, hf*.2, orangered)
+	checkFatal(err)
 
 	// eye-candy
 	grad := gg.NewRadialGradient(cx, cy, r+2, 0, 0, r+2)
@@ -318,9 +316,6 @@ func main() {
 	angle := 0.20
 	inca := angle
 	dump := 0
-
-	orangered := `#ff0000` // `#ff4500`
-	darkred := `#660000`
 
 	for {
 
@@ -374,10 +369,10 @@ func main() {
 
 		}
 
-		t := time.Now()
-		s := float64(t.Second())
+		tm = time.Now()
+		s := float64(tm.Second())
 
-		h, err := strconv.ParseFloat(t.Format("5.000"), 64)
+		h, err := strconv.ParseFloat(tm.Format("5.000"), 64)
 		if nil == err {
 			ea = 6 * h
 		} else {
@@ -395,15 +390,18 @@ func main() {
 		dc.DrawArc(float64(cx), float64(cy), float64(r), degToRadians(0), degToRadians(ea))
 		dc.Stroke()
 
-		// tighter time format, specically with non-monospaced fonts
-		ts := t.Format("15 04")
-		colon := `:`
-		if 0 == int(s)%2 {
-			colon = ` `
+		// svg time - needs crispier
+		ts := tm.Format("15 04")
+		if ts != lastTempo {
+			lastTempo = ts
+			tempo, err = imageTime(tm, hf*.2, orangered)
+			checkFatal(err)
 		}
-
-		placeTime(dc, wf, hf, zface, ts, colon, darkred)
-		placeTime(dc, wf, hf, face, ts, colon, orangered)
+		if 0 == int(s)%2 {
+			dc.DrawImageAnchored(tempo[0], int(cx), int(cy), 0.5, 0.5)
+		} else {
+			dc.DrawImageAnchored(tempo[1], int(cx), int(cy), 0.5, 0.5)
+		}
 
 		// place weather icon
 		if imIcon.image != nil {
@@ -466,13 +464,13 @@ func main() {
 		if `full` == layout {
 			dc.SetHexColor("#ff9900")
 			dc.SetFontFace(dtface)
-			temps = hackaDate(t)
+			temps = hackaDate(tm)
 			dpos := 2 + (5 * (hf / 8))
 			dc.DrawStringAnchored(temps[idx[0]], wf/4, dpos, 0.5, 0.5)
 			dc.DrawStringAnchored(temps[idx[1]], 3*(wf/4), dpos, 0.5, 0.5)
 
 			mx := int(wf * 0.171875)
-			moonI, err := NewLuna(t, lat, lng).PhaseIcon(mx, mx)
+			moonI, err := NewLuna(tm, lat, lng).PhaseIcon(mx, mx)
 			if err == nil && moonI != nil {
 				dc.DrawImageAnchored(moonI, int(3*(wf/4))+2, int(3*(hf/4))+2, .5, .5)
 			}
@@ -606,13 +604,6 @@ func main() {
 	toggle <- true
 	rotator <- true
 
-}
-
-func placeTime(dc *gg.Context, wf, hf float64, face font.Face, ts, colon, color string) {
-	dc.SetHexColor(color)
-	dc.SetFontFace(face)
-	dc.DrawStringAnchored(ts, wf/2, hf*0.47, 0.5, 0.5)
-	dc.DrawStringAnchored(colon, wf/2, hf*0.43, 0.5, 0.5)
 }
 
 func placeWeatherDetail(dc *gg.Context, hf float64, dpface font.Face) {
