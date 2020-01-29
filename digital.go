@@ -33,12 +33,12 @@ func imageTime(t time.Time, scaleh float64, txtColor string) (img [2]draw.Image,
 			{1, 1, 1, 1, 0, 0, 1}, // 3
 			{0, 1, 1, 0, 0, 1, 1}, // 4
 			{1, 0, 1, 1, 0, 1, 1}, // 5
-			{1, 1, 1, 1, 1, 0, 1}, // 6
+			{1, 0, 1, 1, 1, 1, 1}, // 6
 			{1, 1, 1, 0, 0, 0, 0}, // 7
 			{1, 1, 1, 1, 1, 1, 1}, // 8
 			{1, 1, 1, 1, 0, 1, 1}} // 9
 
-		segPos = [5]int{0, 80, int(wt / 2), 210, 290}
+		segPos = [5]int{0, 80, 3 + int(wt/2), 210, 290}
 
 		seg7template = [7]segment{
 			{pathd: `m%d,8l4,-4l28,0l4,4l-4,4l-28,0l-4,-4z`, x: 20},
@@ -50,8 +50,8 @@ func imageTime(t time.Time, scaleh float64, txtColor string) (img [2]draw.Image,
 			{pathd: `m%d,48l4,-4l28,0l4,4l-4,4l-28,0l-4,-4z`, x: 20}}
 
 		seg7style = [2]string{
-			`style="fill:darkgray;fill-opacity:0.2;stroke-width:0.5;stroke:%s;stroke-opacity:0.2;stroke-alignment:inside;"`, // off
-			`style="fill:%[1]s;fill-opacity:1;stroke-width:2;stroke:%[1]s;stroke-opacity:0.8;stroke-alignment:outside;"`}    // on
+			`style="fill:gray;fill-opacity:0.25;stroke-width:0.5;stroke:%s;stroke-opacity:0.25;stroke-alignment:inside;"`, // off
+			`style="fill:%[1]s;fill-opacity:1;stroke-width:2;stroke:%[1]s;stroke-opacity:0.6;stroke-alignment:outside;"`}  // on
 	)
 
 	seg7style[0] = fmt.Sprintf(seg7style[0], txtColor)
@@ -87,6 +87,8 @@ func imageTime(t time.Time, scaleh float64, txtColor string) (img [2]draw.Image,
 		} else {
 			canvas1.Circle(segPos[i], 30, 8, seg7style[1])
 			canvas1.Circle(segPos[i], 60, 8, seg7style[1])
+			canvas0.Circle(segPos[i], 30, 8, seg7style[0])
+			canvas0.Circle(segPos[i], 60, 8, seg7style[0])
 		}
 	}
 	canvas1.Gend()
