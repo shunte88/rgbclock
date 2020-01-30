@@ -12,7 +12,7 @@ import (
 	"github.com/srwiley/rasterx"
 )
 
-func imageTime(t time.Time, scaleh float64, txtColor string) (img [2]draw.Image, err error) {
+func imageTimeThin(t time.Time, scaleh float64, txtColor string) (img [2]draw.Image, err error) {
 
 	// dynamic SVG
 
@@ -101,6 +101,124 @@ func imageTime(t time.Time, scaleh float64, txtColor string) (img [2]draw.Image,
 			canvas1.Circle(int(segPos[i]), 60, 8, seg7style[1])
 			canvas0.Circle(int(segPos[i]), 30, 8, seg7style[0])
 			canvas0.Circle(int(segPos[i]), 60, 8, seg7style[0])
+		}
+	}
+	canvas1.Gend()
+	canvas0.Gend()
+	canvas1.End()
+	canvas0.End()
+
+	//fmt.Println(iconMem1.String())
+
+	iconI0, err := oksvg.ReadIconStream(iconMem0)
+	if err != nil {
+		return img, err
+	}
+	iconI1, err := oksvg.ReadIconStream(iconMem1)
+	if err != nil {
+		return img, err
+	}
+
+	gv0 := rasterx.NewScannerGV(wt, ht, img[0], img[0].Bounds())
+	r0 := rasterx.NewDasher(wt, ht, gv0)
+	iconI0.SetTarget(0, 0, float64(sw), float64(sh))
+	iconI0.Draw(r0, 1.0)
+
+	gv1 := rasterx.NewScannerGV(wt, ht, img[1], img[1].Bounds())
+	r1 := rasterx.NewDasher(wt, ht, gv1)
+	iconI1.SetTarget(0, 0, float64(sw), float64(sh))
+	iconI1.Draw(r1, 1.0)
+
+	return img, nil
+
+}
+
+func imageTime(t time.Time, scaleh float64, txtColor string) (img [2]draw.Image, err error) {
+
+	// dynamic SVG
+
+	type segment struct {
+		pathd string
+		x     float64
+	}
+
+	wt, ht := 420, 120
+	xw := float64(ht) / scaleh
+	sw, sh := float64(wt)/xw, float64(ht)/xw
+
+	var (
+		seg7bits = [10][7]int{
+			{1, 1, 1, 1, 1, 1, 0}, // 0
+			{0, 1, 1, 0, 0, 0, 0}, // 1
+			{1, 1, 0, 1, 1, 0, 1}, // 2
+			{1, 1, 1, 1, 0, 0, 1}, // 3
+			{0, 1, 1, 0, 0, 1, 1}, // 4
+			{1, 0, 1, 1, 0, 1, 1}, // 5
+			{1, 0, 1, 1, 1, 1, 1}, // 6
+			{1, 1, 1, 0, 0, 0, 0}, // 7
+			{1, 1, 1, 1, 1, 1, 1}, // 8
+			{1, 1, 1, 1, 0, 1, 1}} // 9
+
+		segPos = [5]float64{0.00, 10 + 80.00, (3.00 + (float64(wt) / 2.00)), 30 + 210.00, 40 + 290.00}
+
+		seg7template = [7]segment{
+			{pathd: `m%f,9.5l8,-8l25,0l8,8l-8,8l-25,0l-8,-8z`, x: 30},   // a
+			{pathd: `m%f,12.5l8,8l0,25l-8,8l-8,-8l0,-25l8,-8z`, x: 73},  // b
+			{pathd: `m%f,59.5l8,8l0,25l-8,8l-8,-8l0,-25l8,-8z`, x: 73},  // c
+			{pathd: `m%f,102.5l8,-8l25,0l8,8l-8,8l-25,0l-8,-8z`, x: 30}, // d
+			{pathd: `m%f,100.5l-8,-8l0,-25l8,-8l8,8l0,25l-8,8z`, x: 28}, // e
+			{pathd: `m%f,53.5l-8,-8l0,-25l8,-8l8,8l0,25l-8,8z`, x: 28},  // f
+			{pathd: `m%f,56.5l8,-8l25,0l8,8l-8,8l-25,0l-8,-8z`, x: 30}}  // g
+
+		seg7style = [2]string{
+			`style="fill:gray;fill-opacity:0.25;stroke-width:0.5;stroke:%s;stroke-opacity:0.25;stroke-alignment:inside;"`, // off
+			`style="fill:%[1]s;fill-opacity:1;stroke-width:2;stroke:%[1]s;stroke-opacity:0.4;stroke-alignment:outside;"`}  // on
+	)
+
+	seg7style[0] = fmt.Sprintf(seg7style[0], txtColor)
+	seg7style[1] = fmt.Sprintf(seg7style[1], txtColor)
+
+	img[0] = image.NewRGBA(image.Rect(0, 0, int(sw), int(sh)))
+	img[1] = image.NewRGBA(image.Rect(0, 0, int(sw), int(sh)))
+
+	var iconMem1 = new(bytes.Buffer)
+	var iconMem0 = new(bytes.Buffer)
+
+	var canvas1 = svg.New(iconMem1)
+	var canvas0 = svg.New(iconMem0)
+
+	canvas1.Start(wt, ht)
+	canvas0.Start(wt, ht)
+
+	iconMem1.WriteString(`<defs>
+  <filter id="blur" x="0" y="0" width="200%" height="200%">
+    <feOffset result="offOut" in="SourceAlpha" dx="5" dy="5" />
+    <feGaussianBlur result="blurOut" in="offOut" stdDeviation="0.5" />
+    <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+  </filter>
+</defs>`)
+
+	canvas1.Group("id=\"time\" filter=\"url(#blur)\" transform=\"skewX(-12)\"")
+	canvas0.Group("id=\"time\" filter=\"url(#blur)\" transform=\"skewX(-12)\"")
+
+	for i, c := range t.Format(`15:04`) {
+		if c != ':' {
+			s7 := int(c) - int('0')
+			canvas1.Group(fmt.Sprintf("id=\"tempo%d_%d\"", i, s7))
+			canvas0.Group(fmt.Sprintf("id=\"tempo%d_%d\"", i, s7))
+			for t, b := range seg7bits[s7] {
+				canvas1.Path(fmt.Sprintf(seg7template[t].pathd, seg7template[t].x+segPos[i]),
+					seg7style[b])
+				canvas0.Path(fmt.Sprintf(seg7template[t].pathd, seg7template[t].x+segPos[i]),
+					seg7style[b])
+			}
+			canvas1.Gend()
+			canvas0.Gend()
+		} else {
+			canvas1.Circle(int(segPos[i]), 40, 10, seg7style[1])
+			canvas1.Circle(int(segPos[i]), 80, 10, seg7style[1])
+			canvas0.Circle(int(segPos[i]), 40, 10, seg7style[0])
+			canvas0.Circle(int(segPos[i]), 80, 10, seg7style[0])
 		}
 	}
 	canvas1.Gend()
