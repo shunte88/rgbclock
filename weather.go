@@ -186,6 +186,7 @@ func weather() {
 		imIcon, _ = cacheImage(`icon-0`, imIcon, 0.00, ``)
 	}
 	imIcon, err = cacheImage(w.Current.Icon, imIcon, 0.00, ``)
+	// if throws Param mismatch error - check the SVG contains no "none" attributes
 	checkFatal(err)
 	// debug here
 	if snap {
@@ -317,7 +318,7 @@ func thermometer(sw, sh int) (img draw.Image, err error) {
 	alcoCol := `red`
 	alcoWidth := `3.1`
 	if w.Current.tempF <= 32 {
-		alcoCol = `dodgerblue`
+		alcoCol = `navy`
 	}
 	// bulb -
 	canvas.Circle(60, 78, 10, fmt.Sprintf("style=\"fill:%s\"", alcoCol))
