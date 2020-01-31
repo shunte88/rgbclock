@@ -21,43 +21,45 @@ import (
 	"github.com/srwiley/rasterx"
 )
 
-// Daypart forecast period detail
-type Daypart struct {
-	Hilo          string `json:"hilo"`
-	Icon          string `json:"icon"`
-	ID            string `json:"id"`
-	Label         string `json:"label"`
-	Temperature   string `json:"temperature"`
-	Precipitation string `json:"pcntprecip"`
-}
+type (
+	// Daypart forecast period detail
+	Daypart struct {
+		Hilo          string `json:"hilo"`
+		Icon          string `json:"icon"`
+		ID            string `json:"id"`
+		Label         string `json:"label"`
+		Temperature   string `json:"temperature"`
+		Precipitation string `json:"pcntprecip"`
+	}
 
-// Weather server details
-type Weather struct {
-	Current struct {
-		Beafort     int     `json:"beafort"`
-		Daypart0    Daypart `json:"daypart-0"`
-		Daypart1    Daypart `json:"daypart-1"`
-		Daypart2    Daypart `json:"daypart-2"`
-		Daypart3    Daypart `json:"daypart-3"`
-		Daypart4    Daypart `json:"daypart-4"`
-		DewPoint    string  `json:"dew point"`
-		Feels       string  `json:"feels"`
-		Humidity    string  `json:"humidity"`
-		Icon        string  `json:"Icon"`
-		Joke        string  `json:"joke"`
-		Phrase      string  `json:"phrase"`
-		Pressure    string  `json:"pressure"`
-		Price       float64 `json:"price,omitempty"`
-		Sunrise     string  `json:"sunrise"`
-		Sunset      string  `json:"sunset"`
-		Temperature string  `json:"temp"`
-		Ticker      string  `json:"ticker,omitempty"`
-		Visibility  string  `json:"visibility"`
-		Wind        string  `json:"wind"`
-		tempF       float64
-		tempC       float64
-	} `json:"current"`
-}
+	// Weather server details
+	Weather struct {
+		Current struct {
+			Beafort     int     `json:"beafort"`
+			Daypart0    Daypart `json:"daypart-0"`
+			Daypart1    Daypart `json:"daypart-1"`
+			Daypart2    Daypart `json:"daypart-2"`
+			Daypart3    Daypart `json:"daypart-3"`
+			Daypart4    Daypart `json:"daypart-4"`
+			DewPoint    string  `json:"dew point"`
+			Feels       string  `json:"feels"`
+			Humidity    string  `json:"humidity"`
+			Icon        string  `json:"Icon"`
+			Joke        string  `json:"joke"`
+			Phrase      string  `json:"phrase"`
+			Pressure    string  `json:"pressure"`
+			Price       float64 `json:"price,omitempty"`
+			Sunrise     string  `json:"sunrise"`
+			Sunset      string  `json:"sunset"`
+			Temperature string  `json:"temp"`
+			Ticker      string  `json:"ticker,omitempty"`
+			Visibility  string  `json:"visibility"`
+			Wind        string  `json:"wind"`
+			tempF       float64
+			tempC       float64
+		} `json:"current"`
+	}
+)
 
 func parseTime(t string) (time.Time, error) {
 	t = strings.ToUpper(fmt.Sprintf("%08s", t))

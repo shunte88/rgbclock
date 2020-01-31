@@ -16,33 +16,35 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
-type cpuUsage struct {
-	usage    float64
-	total    float64
-	idle     float64
-	memtotal uint64
-	memfree  uint64
-}
+type (
+	cpuUsage struct {
+		usage    float64
+		total    float64
+		idle     float64
+		memtotal uint64
+		memfree  uint64
+	}
 
-// CPUStat simple CPU stats
-type CPUStat struct {
-	temperature   float64
-	publish       cpuUsage
-	last          cpuUsage
-	csTimer       *time.Timer
-	refresh       time.Duration
-	cpustatstemp  draw.Image
-	cpustatsusage draw.Image
-	memstats      draw.Image
-	mux           sync.Mutex
-	face          font.Face
-	fontHeight    float64
-	color         color.Color
-	lastTemp      float64
-	lastUsage     float64
-	lastMemFree   uint64
-	update        bool
-}
+	// CPUStat simple CPU stats
+	CPUStat struct {
+		temperature   float64
+		publish       cpuUsage
+		last          cpuUsage
+		csTimer       *time.Timer
+		refresh       time.Duration
+		cpustatstemp  draw.Image
+		cpustatsusage draw.Image
+		memstats      draw.Image
+		mux           sync.Mutex
+		face          font.Face
+		fontHeight    float64
+		color         color.Color
+		lastTemp      float64
+		lastUsage     float64
+		lastMemFree   uint64
+		update        bool
+	}
+)
 
 // NewCPUStat initialise simple CPU stats widget
 func NewCPUStat(f font.Face, x string) *CPUStat {

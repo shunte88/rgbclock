@@ -9,21 +9,23 @@ import (
 	"time"
 )
 
-type iconCache struct {
-	last  string
-	image draw.Image
-	m     sync.Mutex
-}
+type (
+	iconCache struct {
+		last  string
+		image draw.Image
+		m     sync.Mutex
+	}
 
-type feed struct {
-	title string
-	link  string
-}
+	feed struct {
+		title string
+		link  string
+	}
 
-type daylight struct {
-	brightness int
-	isdaylight bool
-}
+	daylight struct {
+		brightness int
+		isdaylight bool
+	}
+)
 
 var (
 	folding     bool = false

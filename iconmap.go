@@ -6,32 +6,34 @@ import (
 )
 
 // SVG - svg path model
-type SVG struct {
-	Width  int    `xml:"width,attr"`
-	Height int    `xml:"height,attr"`
-	Doc    string `xml:",innerxml"`
-}
+type (
+	SVG struct {
+		Width  int    `xml:"width,attr"`
+		Height int    `xml:"height,attr"`
+		Doc    string `xml:",innerxml"`
+	}
 
-// day/night alternates - if set we chose based on dusk-dawn window
-type noctuque struct {
-	day   string
-	night string
-}
+	// day/night alternates - if set we chose based on dusk-dawn window
+	noctuque struct {
+		day   string
+		night string
+	}
 
-type icon struct {
-	filename string
-	modal    noctuque // day/night alternates - if set we chose based on dusk-dawn window
-	asis     bool
-	color    string
-	scale    float64
-	rotate   float64
-	alpha    float64
-	width    int
-	height   int
-	shadow   bool
-	blur     bool
-	popcolor string
-}
+	icon struct {
+		filename string
+		modal    noctuque // day/night alternates - if set we chose based on dusk-dawn window
+		asis     bool
+		color    string
+		scale    float64
+		rotate   float64
+		alpha    float64
+		width    int
+		height   int
+		shadow   bool
+		blur     bool
+		popcolor string
+	}
+)
 
 var iconMap map[string]icon
 
