@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"math"
+	"math/rand"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -392,7 +393,6 @@ func NewLMSServer(lc LMSConfig) *LMSServer {
 
 	if ls.sses.active {
 		ls.sseclient()
-		go ls.consumeEvents()
 	}
 
 	return ls
@@ -400,16 +400,13 @@ func NewLMSServer(lc LMSConfig) *LMSServer {
 }
 
 func (ls *LMSServer) sseclient() {
-
-	fmt.Println(ls.sses.url)
 	ls.sses.events = make(chan *SSEvent)
 	go ssenotify(ls.sses.url, ls.sses.events)
-
+	go ls.consumeEvents()
 }
 
 func (ls *LMSServer) consumeEvents() {
 	if ls.sses.active {
-		blue := color.RGBA{0, 0, 255, 255}
 		ssecanvas := image.NewRGBA(image.Rect(0, 0, 26, 50))
 		dy := (ssecanvas.Bounds().Max.Y) - 2
 		var scaled map[string]int
@@ -432,16 +429,24 @@ func (ls *LMSServer) consumeEvents() {
 				}
 			}
 			if dirty {
-				// update VU
+				// update rudi-VU
 				draw.Draw(ssecanvas, ssecanvas.Bounds(), image.Transparent, image.ZP, draw.Src)
-				draw.Draw(ssecanvas, image.Rect(2, dy, 12, dy-scaled[`L`]), &image.Uniform{blue}, image.ZP, draw.Src)
-				draw.Draw(ssecanvas, image.Rect(14, dy, 24, dy-scaled[`R`]), &image.Uniform{blue}, image.ZP, draw.Src)
+				draw.Draw(ssecanvas, image.Rect(2, dy, 12, dy-scaled[`L`]), &image.Uniform{getRandomColor()}, image.ZP, draw.Src)
+				draw.Draw(ssecanvas, image.Rect(14, dy, 24, dy-scaled[`R`]), &image.Uniform{getRandomColor()}, image.ZP, draw.Src)
 				ls.mux.Lock()
 				draw.Draw(ls.vu, ls.vu.Bounds(), ssecanvas, image.ZP, draw.Src)
 				ls.mux.Unlock()
 			}
 		}
 	}
+}
+
+func getRandomColor() color.RGBA {
+	rand.Seed(time.Now().UnixNano())
+	r := uint8(rand.Intn(255))
+	g := uint8(rand.Intn(255))
+	b := uint8(rand.Intn(255))
+	return color.RGBA{r, g, b, 128}
 }
 
 // Close and clear the associated cache
