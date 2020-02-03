@@ -4,12 +4,16 @@ LMS:
   IP: "192.168.1.25"
   port: 9000
   player: "b8:27:eb:70:71:5c"
+  sses:
+    active: true
+    IP: "http://192.168.1.37"
+    port: 8022
+    endpoint: "/visionon"
   remaining: true
 RGB:
   scroll_limit: 28
   mapper: "U-maper;Rotate:180"
-  fontfile: "font/LCDM2U__.TTF"
-  fontfile2: "font/Roboto-Black.ttf"
+  fontfile: "font/Roboto-Black.ttf"
   folding: true
   experiment: false
   rows: 64

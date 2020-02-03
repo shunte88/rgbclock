@@ -54,7 +54,6 @@ func init() {
 	checkFatal(err)
 
 	fontfile = viper.GetString("RGB.fontfile")
-	fontfile2 = viper.GetString("RGB.fontfile2")
 
 	layout = viper.GetString("RGB.layout")
 	W = viper.GetInt(layout + ".width")
@@ -124,10 +123,17 @@ func init() {
 	mapInit()
 
 	remaining = viper.GetBool("LMS.remaining")
-	lmsIP := viper.GetString("LMS.IP")
-	lmsPort := viper.GetInt("LMS.port")
-	lmsPlayer := viper.GetString("LMS.player")
-	lms = NewLMSServer(lmsIP, lmsPort, lmsPlayer, base+`/cache/`)
+
+	lms = NewLMSServer(LMSConfig{
+		Host:         viper.GetString("LMS.IP"),
+		Port:         viper.GetInt("LMS.port"),
+		Player:       viper.GetString("LMS.player"),
+		BaseFolder:   base + `/cache/`,
+		SSESActive:   viper.GetBool("LMS.sses.active"),
+		SSESHost:     viper.GetString("LMS.sses.IP"),
+		SSESPort:     viper.GetInt("LMS.sses.port"),
+		SSESEndpoint: viper.GetString("LMS.sses.endpoint"),
+	})
 
 	offset := viper.GetInt("transport.offset")
 	route := viper.GetString("transport.route")
@@ -232,8 +238,8 @@ func main() {
 	font, err := truetype.Parse(gomonobold.TTF)
 	checkFatal(err)
 
-	if `` != fontfile2 {
-		fb, err := ioutil.ReadFile(fontfile2)
+	if `` != fontfile {
+		fb, err := ioutil.ReadFile(fontfile)
 		if nil == err {
 			font, _ = truetype.Parse(fb)
 		}
@@ -509,6 +515,8 @@ func main() {
 			dst := imaging.Resize(lms.Coverart(), 126, 49, imaging.Lanczos)
 			dst = imaging.Blur(imaging.AdjustBrightness(dst, -40), 6.5)
 			dc.DrawImage(dst, 1, 66)
+
+			dc.DrawImage(lms.VU(), 3, int(cy)+3)
 
 			dc.SetHexColor("#ff9900cc")
 			dc.SetFontFace(lmsface)

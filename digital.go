@@ -22,7 +22,7 @@ func imageTime(t time.Time, scaleh float64, txtColor string) (img [2]draw.Image,
 		x     float64
 	}
 
-	wt, ht := 420, 120
+	wt, ht := 422, 124
 	xw := float64(ht) / scaleh
 	sw, sh := float64(wt)/xw, float64(ht)/xw
 
@@ -51,8 +51,8 @@ func imageTime(t time.Time, scaleh float64, txtColor string) (img [2]draw.Image,
 			{pathd: `m%f,57.03529l-3.77628,3.6769l0.66251,1.19251c0.33125,0.66251 1.45751,2.21939 2.45127,3.44503l1.82189,2.28565l14.04512,-0.03312l14.01199,0l3.94191,-3.57753c2.15314,-1.95439 3.94191,-3.77628 3.94191,-4.04128c0,-0.29813 -1.12626,-1.88814 -2.4844,-3.57753l-2.51752,-3.04752l-14.17762,0l-14.14449,0l-3.77628,3.6769l-0.00001,-0.00001z`, x: 28.21771}}
 
 		seg7style = [2]string{
-			fmt.Sprintf("style=\"fill:gray;fill-opacity:0.3;stroke-width:0.5;stroke:%s;stroke-opacity:0.25;stroke-alignment:inside;\"", txtColor), // off
-			fmt.Sprintf("style=\"fill:%[1]s;fill-opacity:1;stroke-width:2;stroke:%[1]s;stroke-opacity:0.4;stroke-alignment:outside;\"", txtColor)} // on
+			fmt.Sprintf("style=\"fill:lightgray;fill-opacity:0.15;stroke-width:0.5;stroke:%s;stroke-opacity:0.25;stroke-alignment:inside;\"", txtColor), // off
+			fmt.Sprintf("style=\"fill:%[1]s;fill-opacity:1;stroke-width:2;stroke:%[1]s;stroke-opacity:0.4;stroke-alignment:outside;\"", txtColor)}       // on
 	)
 
 	img[0] = image.NewRGBA(image.Rect(0, 0, int(sw), int(sh)))

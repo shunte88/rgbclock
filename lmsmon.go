@@ -168,67 +168,79 @@ func Params(params ...interface{}) interface{} {
 	return resultParams
 }
 
-// LMSPlayer exposes several key attributes for the player and current track
-type LMSPlayer struct {
-	MAC         string
-	Playername  string
-	IP          string
-	Mode        string
-	Bitty       string // not Little Britain :)
-	Artist      *InfoLabel
-	Album       *InfoLabel
-	Title       *InfoLabel
-	Albumartist *InfoLabel
-	Composer    *InfoLabel
-	Conductor   *InfoLabel
-	Compilation string
-	Genre       string
-	coverid     string
-	time        float64
-	TimeStr     string
-	duration    float64
-	DurStr      string
-	remaining   float64
-	RemStr      string
-	Percent     float64
-	remote      bool
-	arturl      string
-	coverart    draw.Image
-	repeat      int
-	shuffle     int
-	Bitrate     string
-	Samplesize  float64
-	Samplerate  float64
-	Volume      int
-	Year        string
-	lastVol     int
-	lastRepeat  int
-	lastShuffle int
-}
-
-// LMSServer limited to a single player for current usage
-type LMSServer struct {
-	id            int
-	host          string
-	port          int
-	web           string
-	url           string
-	arturl        string
-	coverart      draw.Image
-	defaultart    draw.Image
-	volume        draw.Image
-	volviz        bool
-	volinit       bool
-	voltrig       *time.Timer
-	playmodifiers draw.Image
-	Player        *LMSPlayer
-	mux           sync.Mutex
-	face          font.Face
-	fontHeight    float64
-	color         color.Color
-	cacache       *CACache
-	update        chan bool
-}
+type (
+	// LMSPlayer exposes several key attributes for the player and current track
+	LMSPlayer struct {
+		MAC         string
+		Playername  string
+		IP          string
+		Mode        string
+		Bitty       string // not Little Britain :)
+		Artist      *InfoLabel
+		Album       *InfoLabel
+		Title       *InfoLabel
+		Albumartist *InfoLabel
+		Composer    *InfoLabel
+		Conductor   *InfoLabel
+		Compilation string
+		Genre       string
+		coverid     string
+		time        float64
+		TimeStr     string
+		duration    float64
+		DurStr      string
+		remaining   float64
+		RemStr      string
+		Percent     float64
+		remote      bool
+		arturl      string
+		coverart    draw.Image
+		repeat      int
+		shuffle     int
+		Bitrate     string
+		Samplesize  float64
+		Samplerate  float64
+		Volume      int
+		Year        string
+		lastVol     int
+		lastRepeat  int
+		lastShuffle int
+	}
+	// SSES server details
+	SSES struct {
+		active   bool
+		host     string
+		port     int
+		endpoint string
+		url      string
+		events   chan *SSEvent
+	}
+	// LMSServer limited to a single player for current usage
+	LMSServer struct {
+		id            int
+		host          string
+		port          int
+		web           string
+		url           string
+		sses          SSES
+		arturl        string
+		coverart      draw.Image
+		defaultart    draw.Image
+		volume        draw.Image
+		vu            draw.Image
+		volviz        bool
+		volinit       bool
+		voltrig       *time.Timer
+		playmodifiers draw.Image
+		Player        *LMSPlayer
+		mux           sync.Mutex
+		face          font.Face
+		fontHeight    float64
+		color         color.Color
+		cacache       *CACache
+		update        chan bool
+	}
+)
 
 // NewLMSPlayer initiate an LMS player
 func NewLMSPlayer(player string) *LMSPlayer {
@@ -310,6 +322,7 @@ func (p *LMSPlayer) Stop() {
 	p.Albumartist.Stop()
 	p.Composer.Stop()
 	p.Conductor.Stop()
+	// stop sses consumption
 }
 
 // Start marquee updates
@@ -322,18 +335,30 @@ func (p *LMSPlayer) Start() {
 	p.Conductor.Start()
 }
 
+// LMSConfig setup
+type LMSConfig struct {
+	Host         string
+	Port         int
+	Player       string
+	BaseFolder   string
+	SSESActive   bool
+	SSESHost     string
+	SSESPort     int
+	SSESEndpoint string
+}
+
 // NewLMSServer initiates an LMS server instance
-func NewLMSServer(host string, port int, player, base string) *LMSServer {
+func NewLMSServer(lc LMSConfig) *LMSServer {
 	ls := new(LMSServer)
 
-	if `` == host {
-		host = `localhost`
+	if `` == lc.Host {
+		lc.Host = `localhost`
 	}
 	ls.id = 0
-	ls.host = host
-	ls.port = port
-	ls.web = fmt.Sprintf("http://%s:%d", host, port)
-	ls.arturl = fmt.Sprintf("%s/music/current/cover.jpg?player=%s", ls.web, player)
+	ls.host = lc.Host
+	ls.port = lc.Port
+	ls.web = fmt.Sprintf("http://%s:%d", lc.Host, lc.Port)
+	ls.arturl = fmt.Sprintf("%s/music/current/cover.jpg?player=%s", ls.web, lc.Player)
 	ls.coverart = imaging.New(500, 500, color.NRGBA{0, 0, 0, 0})
 
 	i := getIcon(`vinyl2`)
@@ -342,21 +367,81 @@ func NewLMSServer(host string, port int, player, base string) *LMSServer {
 
 	ls.url = fmt.Sprintf("%s/jsonrpc.js", ls.web)
 	ls.web += `/`
-	ls.Player = NewLMSPlayer(player)
+	ls.Player = NewLMSPlayer(lc.Player)
 	ls.volume = image.NewRGBA(image.Rect(0, 0, 24, 16))
+	ls.vu = image.NewRGBA(image.Rect(0, 0, 110, 48))
 	ls.playmodifiers = image.NewRGBA(image.Rect(0, 0, 28, 16))
 	ls.face = basicfont.Face7x13
 	ls.fontHeight = 13
 	ls.color = color.White
-	ls.cacache = InitImageCache(base, true)
+	ls.cacache = InitImageCache(lc.BaseFolder, true)
+
+	ls.sses.active = lc.SSESActive
+	ls.sses.host = lc.SSESHost
+	ls.sses.port = lc.SSESPort
+	if lc.SSESEndpoint[0] != '/' {
+		lc.SSESEndpoint = `/` + lc.SSESEndpoint
+	}
+	ls.sses.endpoint = lc.SSESEndpoint
+	ls.sses.url = fmt.Sprintf("%s:%d%s", lc.SSESHost, lc.SSESPort, lc.SSESEndpoint)
 
 	ls.volviz = false
 	ls.voltrig = time.NewTimer(2 * time.Second)
 	ls.voltrig.Stop()
 	ls.volinit = false
 
+	if ls.sses.active {
+		ls.sseclient()
+		go ls.consumeEvents()
+	}
+
 	return ls
 
+}
+
+func (ls *LMSServer) sseclient() {
+
+	fmt.Println(ls.sses.url)
+	ls.sses.events = make(chan *SSEvent)
+	go ssenotify(ls.sses.url, ls.sses.events)
+
+}
+
+func (ls *LMSServer) consumeEvents() {
+	if ls.sses.active {
+		blue := color.RGBA{0, 0, 255, 255}
+		ssecanvas := image.NewRGBA(image.Rect(0, 0, 26, 50))
+		dy := (ssecanvas.Bounds().Max.Y) - 2
+		var scaled map[string]int
+		scaled = make(map[string]int)
+		scaled[`L`], scaled[`R`] = -1, -1
+		for event := range ls.sses.events {
+			var m Meter
+			b, err := ioutil.ReadAll(event.Data)
+			if err != nil {
+				panic(err)
+			}
+			if err := json.Unmarshal(b, &m); err != nil {
+				panic(err)
+			}
+			dirty := false
+			for _, c := range m.Channels {
+				if scaled[c.Name] != int(c.Scaled) {
+					dirty = true
+					scaled[c.Name] = int(c.Scaled)
+				}
+			}
+			if dirty {
+				// update VU
+				draw.Draw(ssecanvas, ssecanvas.Bounds(), image.Transparent, image.ZP, draw.Src)
+				draw.Draw(ssecanvas, image.Rect(2, dy, 12, dy-scaled[`L`]), &image.Uniform{blue}, image.ZP, draw.Src)
+				draw.Draw(ssecanvas, image.Rect(14, dy, 24, dy-scaled[`R`]), &image.Uniform{blue}, image.ZP, draw.Src)
+				ls.mux.Lock()
+				draw.Draw(ls.vu, ls.vu.Bounds(), ssecanvas, image.ZP, draw.Src)
+				ls.mux.Unlock()
+			}
+		}
+	}
 }
 
 // Close and clear the associated cache
@@ -367,6 +452,15 @@ func (ls *LMSServer) Close() {
 // PlayerMAC sets player MAC - useful if current player changes
 func (ls *LMSServer) PlayerMAC(player string) {
 	ls.Player.MAC = player
+}
+
+// SSESAddress returns sses server address if active
+func (ls *LMSServer) SSESAddress() string {
+	r := ``
+	if ls.sses.active {
+		r = ls.sses.url
+	}
+	return r
 }
 
 func (ls *LMSServer) requestAndKey(params interface{}, key string) (interface{}, error) {
@@ -432,19 +526,21 @@ func (ls *LMSServer) Start() {
 	ls.Player.Start()
 }
 
-// Stop the schedule update
+// Stop the schedule updates and close event channel if active
 func (ls *LMSServer) Stop() {
 	ls.update <- true
+	if ls.sses.active {
+		close(ls.sses.events)
+	}
 	ls.Player.Stop()
 }
-
-//var fuggle = true
 
 func (ls *LMSServer) updatePlayer() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println(err)
+			ls.mux.Unlock() // ensure unlock
+			fmt.Println(`exception recovered`, err)
 		}
 	}()
 
@@ -511,10 +607,7 @@ func (ls *LMSServer) updatePlayer() {
 					ls.Player.coverid = s.RemoteMeta.Coverid
 					ls.Player.Bitrate = s.RemoteMeta.Bitrate
 					ls.Player.Bitty = fmt.Sprintf("• %v •", ls.Player.Bitrate)
-					//if fuggle {
-					//	fmt.Printf("%#v", s)
-					//	fuggle = false
-					//}
+
 				} else {
 					artist := s.PlaylistLoop[0].Artist
 					if artist == `` {
@@ -564,9 +657,8 @@ func (ls *LMSServer) updatePlayer() {
 				}
 
 				if ckcd != ls.Player.coverid {
-					//go ls.cacheImageBackground()
 					err = ls.cacheImage()
-					checkFatal(err)
+					checkFatal(err) // will be caught...
 				}
 			} else {
 				ls.volinit = false
@@ -585,6 +677,11 @@ func (ls *LMSServer) updatePlayer() {
 // Coverart returns the cover image cache
 func (ls *LMSServer) Coverart() draw.Image {
 	return ls.coverart
+}
+
+// VU returns the vu meter
+func (ls *LMSServer) VU() draw.Image {
+	return ls.vu
 }
 
 // Volume returns the volume glyph
@@ -705,7 +802,9 @@ func (ls *LMSServer) getImage(r io.Reader) (image.Image, error) {
 	// need to make this buffered and cancel-able!
 	im, err := imaging.Decode(r, imaging.AutoOrientation(true))
 	if err != nil {
-		return nil, err
+		ls.drawBase(true)
+		//im = ls.defaultart // ????????
+		return im, err
 	}
 	im = imaging.Resize(im, 500, 500, imaging.Lanczos)
 	return im, nil

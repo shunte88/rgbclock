@@ -1,3 +1,4 @@
+mv wi-raindrop.svg flowers/
 mv wi-thermometer.svg flowers/
 mv wi-night-cloudy-gusts.svg flowers/
 mv wi-night-cloudy-high.svg flowers/
