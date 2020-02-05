@@ -30,17 +30,21 @@ The meter is constructed by consuming streamed events from the piCorePlayer.  Se
 
 <img width="400" src="assets/vurgbclock.gif" align="center" />
 
-The news feed provides updates at configured intervals.  Multiple feeds may be specified but they should be RSS compliant or the results are unpredictable.
+The news feed provides updates at configured intervals.  Multiple feeds may be specified but they should be fully RSS/Atom compliant or the results are unpredictable.
 
 Minimal performance metrics may also be displayed.  These have been paticularly useful during the development of the coverart cache.
 
 If a Logitech Media Server is configured details are displayed of the currently playing track inclusive of the cover art.  The coverart thumbnail is cached locally to minimize delays in rendering the display.  The cache is time-based and automatically purges to minimize local disk usage.
 
-A VU and spectrum analyser display are also to be added; this will utilize a subscription based streamed event, SES, interface that runs locally on the [piCorePlayer].  Spectrum analyser and VU will only be shown in "maxi" mode utilizing 9 64x64 panels.
+A VU and spectrum analyser display are also to be added; this utilizes a subscription based streamed event, SES, interface that runs locally on the [piCorePlayer].  Spectrum analyser and VU will only be shown in "maxi" mode utilizing 9 64x64 panels.
+
+The SES service can be found in the Vision On repo; given the use of SES the service could be used to render content on any device that supports HTML5 including most modern  browesers.
 
 MBTA arrival predictions are also available.  Specify the required routes, stops and when the MBTA details should be displayed via configuration.
 
-Moon phase is shown in the lower right corner of the display.  Phase updates in real time, the calculated phase is time dependent but does not include the observation locale.  Given the display fidelity the phase calculation and the resultant graphic are good to go!
+Moon phase is shown in the lower right corner of the display.  Phase and lunar azimuth update in real time.  
+
+Given the display fidelity the resultant graphic are good to go!
 
 <img width="200" src="assets/lua.gif" align="center" />
 
