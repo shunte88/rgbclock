@@ -36,7 +36,7 @@ Minimal performance metrics may also be displayed.  These have been paticularly 
 
 If a Logitech Media Server is configured details are displayed of the currently playing track inclusive of the cover art.  The coverart thumbnail is cached locally to minimize delays in rendering the display.  The cache is time-based and automatically purges to minimize local disk usage.
 
-A VU and spectrum analyser display are also to be added; this utilizes a subscription based streamed event, SES, interface that runs locally on the [piCorePlayer].  Spectrum analyser and VU will only be shown in "maxi" mode utilizing 9 64x64 panels.
+A VU and spectrum analyser display are also to be added; this utilizes a subscription based streamed event, SES, interface that runs locally on the [piCorePlayer].  Spectrum analyser and VU will only be shown in "maxi" mode utilizing 9 64x64 panels; or you could mofify the code to fit your setup and needs.
 
 The SES service can be found in the Vision On repo; given the use of SES the service could be used to render content on any device that supports HTML5 including most modern  browesers.
 

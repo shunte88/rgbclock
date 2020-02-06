@@ -10,6 +10,11 @@ LMS:
     port: 8022
     endpoint: "/visionon"
   remaining: true
+  visualize:
+    meter: vuAnalog
+    metermode: peak
+    layout: horizontal
+    baseimage: "/home/pi/rgbclock/svg/vuscale.png"
 RGB:
   scroll_limit: 28
   mapper: "U-maper;Rotate:180"

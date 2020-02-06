@@ -28,9 +28,10 @@ type (
 
 	// Channel data - visualization
 	Channel struct {
-		Name        string `json:"name"`
-		Accumulated int32  `json:"accumulated,omitempty"`
-		Scaled      int32  `json:"scaled,omitempty"`
+		Name        string  `json:"name"`
+		Accumulated float64 `json:"accumulated,omitempty"`
+		DBfs        int32   `json:"dBfs,omitempty"`
+		Scaled      int32   `json:"scaled,omitempty"`
 	}
 	// Meter implementation, VU, Spectrum, RMS etc ...
 	Meter struct {

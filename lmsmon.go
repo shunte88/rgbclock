@@ -170,6 +170,21 @@ func Params(params ...interface{}) interface{} {
 }
 
 type (
+	// VULayout - visualization setup
+	VULayout struct {
+		meter     string
+		base      string
+		layout    string //  vertical/horizontal
+		xpos      [2]float64
+		w         int
+		h         int
+		w2m       int
+		h2m       int
+		wMeter    float64
+		rMeter    float64
+		rWell     float64
+		baseImage draw.Image
+	}
 	// LMSPlayer exposes several key attributes for the player and current track
 	LMSPlayer struct {
 		MAC         string
@@ -228,6 +243,7 @@ type (
 		coverart      draw.Image
 		defaultart    draw.Image
 		volume        draw.Image
+		vulayout      VULayout
 		vu            draw.Image
 		volviz        bool
 		volinit       bool
@@ -342,6 +358,10 @@ type LMSConfig struct {
 	Port         int
 	Player       string
 	BaseFolder   string
+	Meter        string
+	MeterMode    string
+	MeterLayout  string
+	MeterBase    string
 	SSESActive   bool
 	SSESHost     string
 	SSESPort     int
@@ -370,7 +390,7 @@ func NewLMSServer(lc LMSConfig) *LMSServer {
 	ls.web += `/`
 	ls.Player = NewLMSPlayer(lc.Player)
 	ls.volume = image.NewRGBA(image.Rect(0, 0, 24, 16))
-	ls.vu = image.NewRGBA(image.Rect(0, 0, 110, 48))
+	ls.vu = image.NewRGBA(image.Rect(0, 0, 124, 54))
 	ls.playmodifiers = image.NewRGBA(image.Rect(0, 0, 28, 16))
 	ls.face = basicfont.Face7x13
 	ls.fontHeight = 13
@@ -391,6 +411,13 @@ func NewLMSServer(lc LMSConfig) *LMSServer {
 	ls.voltrig.Stop()
 	ls.volinit = false
 
+	if `` != lc.Meter {
+		ls.vulayout.meter = lc.Meter
+		ls.vulayout.layout = lc.MeterLayout
+		ls.vulayout.base = lc.MeterBase
+		ls.initVUBase()
+	}
+
 	if ls.sses.active {
 		ls.sseclient()
 	}
@@ -407,11 +434,27 @@ func (ls *LMSServer) sseclient() {
 
 func (ls *LMSServer) consumeEvents() {
 	if ls.sses.active {
-		ssecanvas := image.NewRGBA(image.Rect(0, 0, 26, 50))
-		dy := (ssecanvas.Bounds().Max.Y) - 2
-		var scaled map[string]int
-		scaled = make(map[string]int)
-		scaled[`L`], scaled[`R`] = -1, -1
+
+		/*
+			secanvas := image.NewRGBA(image.Rect(0, 0, 26, 50))
+			dy := (ssecanvas.Bounds().Max.Y) - 2
+			var scaled map[string]int
+			scaled = make(map[string]int)
+			scaled[`L`], scaled[`R`] = -1, -1
+			var accum map[string]float64
+			accum = make(map[string]float64)
+			accum[`L`], accum[`R`] = -1.000, -1.000
+		*/
+		var accum [2]float64
+		var dBfs [2]int32
+		var maxaccum [2]float64
+		var maxdBfs [2]int32
+		var scaled [2]int32
+		accum[0], accum[1] = -1.000, -1.000
+		maxaccum = accum
+		dBfs[0], dBfs[1] = -96, -96
+		maxdBfs = dBfs
+		scaled[0], scaled[1] = -1, -1
 		for event := range ls.sses.events {
 			var m Meter
 			b, err := ioutil.ReadAll(event.Data)
@@ -423,19 +466,51 @@ func (ls *LMSServer) consumeEvents() {
 			}
 			dirty := false
 			for _, c := range m.Channels {
-				if scaled[c.Name] != int(c.Scaled) {
+				//if scaled[c.Name] != int(c.Scaled) {
+				//	dirty = true
+				//	scaled[c.Name] = int(c.Scaled)
+				//}
+				i := 0
+				if `R` == c.Name {
+					i = 1
+				}
+				if accum[i] != c.Accumulated {
 					dirty = true
-					scaled[c.Name] = int(c.Scaled)
+					accum[i] = c.Accumulated
+					if accum[i] > maxaccum[i] {
+						maxaccum[i] = accum[i]
+						fmt.Println(c.Name, `Accum`, maxaccum[i])
+					}
+				}
+				if dBfs[i] != c.DBfs {
+					dirty = true
+					dBfs[i] = c.DBfs
+					if dBfs[i] > maxdBfs[i] {
+						maxdBfs[i] = dBfs[i]
+						fmt.Println(c.Name, `dB`, maxdBfs[i])
+					}
+				}
+				if scaled[i] != c.Scaled {
+					dirty = true
+					scaled[i] = c.Scaled
 				}
 			}
 			if dirty {
+
 				// update rudi-VU
-				draw.Draw(ssecanvas, ssecanvas.Bounds(), image.Transparent, image.ZP, draw.Src)
-				draw.Draw(ssecanvas, image.Rect(2, dy, 12, dy-scaled[`L`]), &image.Uniform{getRandomColor()}, image.ZP, draw.Src)
-				draw.Draw(ssecanvas, image.Rect(14, dy, 24, dy-scaled[`R`]), &image.Uniform{getRandomColor()}, image.ZP, draw.Src)
-				ls.mux.Lock()
-				draw.Draw(ls.vu, ls.vu.Bounds(), ssecanvas, image.ZP, draw.Src)
-				ls.mux.Unlock()
+				/*
+					draw.Draw(ssecanvas, ssecanvas.Bounds(), image.Transparent, image.ZP, draw.Src)
+					cl := 255 - uint8(float64(scaled[`L`])*5.3125)
+					cll := color.RGBA{cl, 255 - cl, 192, 128}
+					draw.Draw(ssecanvas, image.Rect(2, dy, 12, dy-scaled[`L`]), &image.Uniform{cll}, image.ZP, draw.Src)
+					cl = 255 - uint8(float64(scaled[`R`])*5.3125)
+					cll = color.RGBA{255 - cl, 128, cl, 128}
+					draw.Draw(ssecanvas, image.Rect(14, dy, 24, dy-scaled[`R`]), &image.Uniform{cll}, image.ZP, draw.Src)
+					ls.mux.Lock()
+					draw.Draw(ls.vu, ls.vu.Bounds(), ssecanvas, image.ZP, draw.Src)
+					ls.mux.Unlock()
+				*/
+				ls.vuAnalog(accum, scaled, dBfs)
 			}
 		}
 	}

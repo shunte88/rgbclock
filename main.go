@@ -129,6 +129,10 @@ func init() {
 		Port:         viper.GetInt("LMS.port"),
 		Player:       viper.GetString("LMS.player"),
 		BaseFolder:   base + `/cache/`,
+		Meter:        viper.GetString("LMS.visualize.meter"),
+		MeterMode:    viper.GetString("LMS.visualize.metermode"),
+		MeterLayout:  viper.GetString("LMS.visualize.layout"),
+		MeterBase:    viper.GetString("LMS.visualize.baseimage"),
 		SSESActive:   viper.GetBool("LMS.sses.active"),
 		SSESHost:     viper.GetString("LMS.sses.IP"),
 		SSESPort:     viper.GetInt("LMS.sses.port"),
@@ -516,7 +520,7 @@ func main() {
 			dst = imaging.Blur(imaging.AdjustBrightness(dst, -40), 6.5)
 			dc.DrawImage(dst, 1, 66)
 
-			dc.DrawImage(lms.VU(), 3, int(cy)+3)
+			dc.DrawImageAnchored(lms.VU(), int(cx), int(cy)+24, .5, .5)
 
 			dc.SetHexColor("#ff9900cc")
 			dc.SetFontFace(lmsface)
