@@ -173,6 +173,7 @@ type (
 	// VULayout - visualization setup
 	VULayout struct {
 		meter     string
+		mode      string
 		base      string
 		layout    string //  vertical/horizontal
 		xpos      [2]float64
@@ -415,6 +416,7 @@ func NewLMSServer(lc LMSConfig) *LMSServer {
 		ls.vulayout.meter = lc.Meter
 		ls.vulayout.layout = lc.MeterLayout
 		ls.vulayout.base = lc.MeterBase
+		ls.vulayout.mode = lc.MeterMode
 		ls.initVUBase()
 	}
 
@@ -445,16 +447,16 @@ func (ls *LMSServer) consumeEvents() {
 			accum = make(map[string]float64)
 			accum[`L`], accum[`R`] = -1.000, -1.000
 		*/
-		var accum [2]float64
+		var accum [2]int32
 		var dBfs [2]int32
-		var maxaccum [2]float64
-		var maxdBfs [2]int32
+		var dB [2]int32
+		var linear [2]int32
 		var scaled [2]int32
 		accum[0], accum[1] = -1.000, -1.000
-		maxaccum = accum
 		dBfs[0], dBfs[1] = -96, -96
-		maxdBfs = dBfs
+		dB[0], dB[1] = -96, -96
 		scaled[0], scaled[1] = -1, -1
+		linear[0], linear[1] = -1, -1
 		for event := range ls.sses.events {
 			var m Meter
 			b, err := ioutil.ReadAll(event.Data)
@@ -466,10 +468,6 @@ func (ls *LMSServer) consumeEvents() {
 			}
 			dirty := false
 			for _, c := range m.Channels {
-				//if scaled[c.Name] != int(c.Scaled) {
-				//	dirty = true
-				//	scaled[c.Name] = int(c.Scaled)
-				//}
 				i := 0
 				if `R` == c.Name {
 					i = 1
@@ -477,18 +475,18 @@ func (ls *LMSServer) consumeEvents() {
 				if accum[i] != c.Accumulated {
 					dirty = true
 					accum[i] = c.Accumulated
-					if accum[i] > maxaccum[i] {
-						maxaccum[i] = accum[i]
-						fmt.Println(c.Name, `Accum`, maxaccum[i])
-					}
+				}
+				if linear[i] != c.Linear {
+					dirty = true
+					linear[i] = c.Linear
 				}
 				if dBfs[i] != c.DBfs {
 					dirty = true
 					dBfs[i] = c.DBfs
-					if dBfs[i] > maxdBfs[i] {
-						maxdBfs[i] = dBfs[i]
-						fmt.Println(c.Name, `dB`, maxdBfs[i])
-					}
+				}
+				if dB[i] != c.DB {
+					dirty = true
+					dB[i] = c.DB
 				}
 				if scaled[i] != c.Scaled {
 					dirty = true
@@ -510,7 +508,7 @@ func (ls *LMSServer) consumeEvents() {
 					draw.Draw(ls.vu, ls.vu.Bounds(), ssecanvas, image.ZP, draw.Src)
 					ls.mux.Unlock()
 				*/
-				ls.vuAnalog(accum, scaled, dBfs)
+				ls.vuAnalog(accum, scaled, dB, dBfs, linear)
 			}
 		}
 	}
@@ -757,6 +755,11 @@ func (ls *LMSServer) updatePlayer() {
 // Coverart returns the cover image cache
 func (ls *LMSServer) Coverart() draw.Image {
 	return ls.coverart
+}
+
+// VUActive meter is active
+func (ls *LMSServer) VUActive() bool {
+	return (`` != ls.vulayout.meter)
 }
 
 // VU returns the vu meter

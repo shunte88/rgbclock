@@ -17,6 +17,93 @@ import (
 	"github.com/srwiley/rasterx"
 )
 
+func (ls *LMSServer) initVUBase() {
+
+	vuf, err := os.Open(ls.vulayout.base)
+	if err != nil {
+		fmt.Println(`Open exception`, ls.vulayout.base, `:`, err)
+		panic(err)
+	}
+	defer vuf.Close()
+
+	vu, err := png.Decode(vuf)
+	if err != nil {
+		fmt.Println(`Decode PNG exception`, ls.vulayout.base, `:`, err)
+		panic(err)
+	}
+
+	z := vu.Bounds().Max.X
+	// horizontal/vertical layout
+	if `horizontal` == ls.vulayout.layout {
+		vu = imaging.Resize(vu, int(122/2), 40, imaging.Lanczos)
+		b := vu.Bounds()
+		ls.vulayout.w = b.Max.X
+		ls.vulayout.h = b.Max.Y
+		ls.vulayout.w2m = 2*(ls.vulayout.w) + 4
+		ls.vulayout.h2m = ls.vulayout.h + 2
+		ls.vulayout.wMeter = float64(ls.vulayout.h) + (float64(b.Max.X) * (41.00 / float64(z)))
+		ls.vulayout.rMeter = float64(b.Max.X) * (235.00 / float64(z))
+		ls.vulayout.rWell = float64(ls.vulayout.h) / 5.5
+	}
+	// create new image an place the meters
+	ls.vulayout.baseImage = image.NewRGBA(image.Rect(0, 0, ls.vulayout.w2m, ls.vulayout.h2m))
+	for i := 0; i < 2; i++ {
+		pt := image.Point{1 + i + (i * (ls.vulayout.w + 1)), 1}
+		ls.vulayout.xpos[i] = float64(pt.X) + (float64(ls.vulayout.w) / 2.00)
+		r := image.Rectangle{pt, pt.Add(image.Point{ls.vulayout.w, ls.vulayout.h})}
+		draw.Draw(ls.vulayout.baseImage, r, vu, image.ZP, draw.Src)
+	}
+	ls.vu = image.NewRGBA(image.Rect(0, 0, ls.vulayout.baseImage.Bounds().Max.X, ls.vulayout.baseImage.Bounds().Max.Y))
+
+}
+
+func (ls *LMSServer) vuAnalog(accum [2]int32, scaled [2]int32, dB [2]int32, dBfs [2]int32, linear [2]int32) {
+
+	ls.mux.Lock()
+	defer ls.mux.Unlock()
+
+	dc := gg.NewContext(ls.vulayout.w2m, ls.vulayout.h2m)
+	dc.DrawImageAnchored(ls.vulayout.baseImage, 0, 0, 0, 0)
+	rad := (180.00 / math.Pi)
+
+	for channel := 0; channel < 2; channel++ {
+
+		mv := 0.00
+		// depending on the mode - calculate value
+
+		// simple pre-scaled
+		mv = float64(scaled[channel]) * (2 * 36.00) / 48.00
+		mv -= 36.000 // zero adjust
+
+		fmt.Printf("mv %f, scaled %.2d, dB %.3d, dBfs %.3d, Lin %.3d\n",
+			mv, scaled[channel], dB[channel], dBfs[channel], linear[channel])
+
+		ax := (ls.vulayout.xpos[channel] + (math.Sin(mv/rad) * ls.vulayout.rMeter))
+		ay := (ls.vulayout.wMeter - (math.Cos(mv/rad) * ls.vulayout.rMeter))
+
+		// draw the needle
+		dc.SetLineWidth(0.8)
+		dc.SetHexColor("#FF4500")
+		dc.DrawLine(ls.vulayout.xpos[channel], ls.vulayout.wMeter, ax, ay)
+		dc.Stroke()
+
+		// draw the well
+		dc.SetLineWidth(1)
+		dc.SetHexColor("#00ff00")
+		dc.StrokePreserve()
+		dc.SetHexColor("#000000")
+
+		dc.DrawEllipse(ls.vulayout.xpos[channel],
+			ls.vulayout.wMeter, ls.vulayout.rWell*1.2, ls.vulayout.rWell)
+		dc.Fill()
+		dc.Stroke()
+
+	}
+
+	draw.Draw(ls.vu, ls.vu.Bounds(), dc.Image(), image.ZP, draw.Src)
+
+}
+
 func (ls *LMSServer) vuAnalogNotUsed(channel string, swing, sw, sh int) (img draw.Image, err error) {
 
 	img = image.NewRGBA(image.Rect(0, 0, sw, sh))
@@ -112,84 +199,5 @@ func (ls *LMSServer) vuAnalogNotUsed(channel string, swing, sw, sh int) (img dra
 	iconI.Draw(r, 1.0)
 
 	return img, nil
-
-}
-
-func (ls *LMSServer) initVUBase() {
-
-	vuf, err := os.Open(ls.vulayout.base)
-	if err != nil {
-		fmt.Println(`Open exception`, ls.vulayout.base, `:`, err)
-		panic(err)
-	}
-	defer vuf.Close()
-
-	vu, err := png.Decode(vuf)
-	if err != nil {
-		fmt.Println(`Decode PNG exception`, ls.vulayout.base, `:`, err)
-		panic(err)
-	}
-
-	z := vu.Bounds().Max.X
-	// horizontal/vertical layout
-	if `horizontal` == ls.vulayout.layout {
-		vu = imaging.Resize(vu, int(122/2), 40, imaging.Lanczos)
-		b := vu.Bounds()
-		ls.vulayout.w = b.Max.X
-		ls.vulayout.h = b.Max.Y
-		ls.vulayout.w2m = 2*(ls.vulayout.w) + 4
-		ls.vulayout.h2m = ls.vulayout.h + 2
-		ls.vulayout.wMeter = float64(ls.vulayout.h) + (float64(b.Max.X) * (41.00 / float64(z)))
-		ls.vulayout.rMeter = float64(b.Max.X) * (235.00 / float64(z))
-		ls.vulayout.rWell = float64(ls.vulayout.h) / 5.5
-	}
-	// create new image an place the meters
-	ls.vulayout.baseImage = image.NewRGBA(image.Rect(0, 0, ls.vulayout.w2m, ls.vulayout.h2m))
-	for i := 0; i < 2; i++ {
-		pt := image.Point{1 + i + (i * (ls.vulayout.w + 1)), 1}
-		ls.vulayout.xpos[i] = float64(pt.X) + (float64(ls.vulayout.w) / 2.00)
-		r := image.Rectangle{pt, pt.Add(image.Point{ls.vulayout.w, ls.vulayout.h})}
-		draw.Draw(ls.vulayout.baseImage, r, vu, image.ZP, draw.Src)
-	}
-	ls.vu = image.NewRGBA(image.Rect(0, 0, ls.vulayout.baseImage.Bounds().Max.X, ls.vulayout.baseImage.Bounds().Max.Y))
-
-}
-
-func (ls *LMSServer) vuAnalog(accum [2]float64, scaled [2]int32, dBfs [2]int32) {
-
-	ls.mux.Lock()
-	defer ls.mux.Unlock()
-
-	dc := gg.NewContext(ls.vulayout.w2m, ls.vulayout.h2m)
-	dc.DrawImageAnchored(ls.vulayout.baseImage, 0, 0, 0, 0)
-
-	for channel := 0; channel < 2; channel++ {
-
-		//MeterValue := float64(accum[channel]/44100) * (2 * 36.00) / 48.0
-		MeterValue := float64(scaled[channel]) * (2 * 36.00) / 48.00
-		MeterValue -= 36.000 // zero adjust
-		ax := (ls.vulayout.xpos[channel] + (math.Sin(MeterValue/(180.00/math.Pi)) * ls.vulayout.rMeter))
-		ay := (ls.vulayout.wMeter - (math.Cos(MeterValue/(180.00/math.Pi)) * ls.vulayout.rMeter))
-
-		// draw the needle
-		dc.SetLineWidth(0.8)
-		dc.SetHexColor("#336666")
-		dc.DrawLine(ls.vulayout.xpos[channel], ls.vulayout.wMeter, ax, ay)
-		dc.Stroke()
-
-		// draw the well
-		dc.SetLineWidth(1)
-		//dc.SetHexColor("#FFCC00")
-		dc.SetHexColor("#00ff00")
-		dc.StrokePreserve()
-		dc.SetHexColor("#000000")
-
-		dc.DrawEllipse(ls.vulayout.xpos[channel], ls.vulayout.wMeter, ls.vulayout.rWell*1.2, ls.vulayout.rWell)
-		dc.Fill()
-		dc.Stroke()
-
-	}
-
-	draw.Draw(ls.vu, ls.vu.Bounds(), dc.Image(), image.ZP, draw.Src)
 
 }

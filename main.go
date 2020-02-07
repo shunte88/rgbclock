@@ -520,24 +520,30 @@ func main() {
 			dst = imaging.Blur(imaging.AdjustBrightness(dst, -40), 6.5)
 			dc.DrawImage(dst, 1, 66)
 
-			dc.DrawImageAnchored(lms.VU(), int(cx), int(cy)+24, .5, .5)
+			if lms.VUActive() && !mode {
 
-			dc.SetHexColor("#ff9900cc")
-			dc.SetFontFace(lmsface)
+				dc.DrawImageAnchored(lms.VU(), int(cx), int(cy)+24, .5, .5)
 
-			pos := int(cy + 11)
-			dc.DrawImageAnchored(lms.Player.Albumartist.Image(), int(W/2), pos, 0.5, 0.5)
-			pos += 9
-			dc.DrawImageAnchored(lms.Player.Album.Image(), int(W/2), pos, 0.5, 0.5)
-			pos += 9
-			dc.DrawImageAnchored(lms.Player.Title.Image(), int(W/2), pos, 0.5, 0.5)
-			pos += 9
-			dc.DrawImageAnchored(lms.Player.Artist.Image(), int(W/2), pos, 0.5, 0.5)
-			dc.DrawStringAnchored(fmt.Sprintf("• %v •", lms.Player.Year), float64(W/2), float64(cy+44), 0.5, 0.5)
-			pos += 9
-			dc.DrawImageAnchored(lms.PlayModifiers(), 1, pos, 0, 0.5)
-			vol := lms.Volume()
-			dc.DrawImageAnchored(vol, W-(vol.Bounds().Max.X+2), pos, 0, 0.5)
+			} else {
+
+				dc.SetHexColor("#ff9900cc")
+				dc.SetFontFace(lmsface)
+
+				pos := int(cy + 11)
+				dc.DrawImageAnchored(lms.Player.Albumartist.Image(), int(W/2), pos, 0.5, 0.5)
+				pos += 9
+				dc.DrawImageAnchored(lms.Player.Album.Image(), int(W/2), pos, 0.5, 0.5)
+				pos += 9
+				dc.DrawImageAnchored(lms.Player.Title.Image(), int(W/2), pos, 0.5, 0.5)
+				pos += 9
+				dc.DrawImageAnchored(lms.Player.Artist.Image(), int(W/2), pos, 0.5, 0.5)
+				dc.DrawStringAnchored(fmt.Sprintf("• %v •", lms.Player.Year), float64(W/2), float64(cy+44), 0.5, 0.5)
+				pos += 9
+				dc.DrawImageAnchored(lms.PlayModifiers(), 1, pos, 0, 0.5)
+				vol := lms.Volume()
+				dc.DrawImageAnchored(vol, W-(vol.Bounds().Max.X+2), pos, 0, 0.5)
+
+			}
 
 			placeBorderZone(dc, lmsface, lw, 68, 50)
 			drawHorizontalBar(dc, 10, 115, lms.Player.Percent)
