@@ -447,16 +447,13 @@ func (ls *LMSServer) consumeEvents() {
 			accum = make(map[string]float64)
 			accum[`L`], accum[`R`] = -1.000, -1.000
 		*/
-		var accum [2]int32
-		var dBfs [2]int32
-		var dB [2]int32
-		var linear [2]int32
-		var scaled [2]int32
-		accum[0], accum[1] = -1.000, -1.000
-		dBfs[0], dBfs[1] = -96, -96
-		dB[0], dB[1] = -96, -96
-		scaled[0], scaled[1] = -1, -1
-		linear[0], linear[1] = -1, -1
+		accum := [2]int32{-1, -1}
+		dBfs := [2]int32{1000, 1000}
+		dB := [2]int32{1000, 1000}
+		linear := [2]int32{-1, -1}
+		scaled := [2]int32{-1, -1}
+		mindb := [2]int32{1000, 1000}
+		maxdb := [2]int32{-1000, -1000}
 		for event := range ls.sses.events {
 			var m Meter
 			b, err := ioutil.ReadAll(event.Data)
@@ -471,6 +468,14 @@ func (ls *LMSServer) consumeEvents() {
 				i := 0
 				if `R` == c.Name {
 					i = 1
+				}
+				if c.DB < mindb[i] {
+					mindb[i] = c.DB
+					fmt.Println(c.Name, `min`, mindb[i], `max`, maxdb[i])
+				}
+				if c.DB > maxdb[i] {
+					maxdb[i] = c.DB
+					fmt.Println(c.Name, `min`, mindb[i], `max`, maxdb[i])
 				}
 				if accum[i] != c.Accumulated {
 					dirty = true

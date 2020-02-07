@@ -74,10 +74,10 @@ func (ls *LMSServer) vuAnalog(accum [2]int32, scaled [2]int32, dB [2]int32, dBfs
 		// simple pre-scaled
 		mv = float64(scaled[channel]) * (2 * 36.00) / 48.00
 		mv -= 36.000 // zero adjust
-
-		fmt.Printf("mv %f, scaled %.2d, dB %.3d, dBfs %.3d, Lin %.3d\n",
-			mv, scaled[channel], dB[channel], dBfs[channel], linear[channel])
-
+		/*
+			fmt.Printf("mv %f, scaled %.2d, dB %.3d, dBfs %.3d, Lin %.3d\n",
+				mv, scaled[channel], dB[channel], dBfs[channel], linear[channel])
+		*/
 		ax := (ls.vulayout.xpos[channel] + (math.Sin(mv/rad) * ls.vulayout.rMeter))
 		ay := (ls.vulayout.wMeter - (math.Cos(mv/rad) * ls.vulayout.rMeter))
 
