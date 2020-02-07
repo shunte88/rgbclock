@@ -30,6 +30,10 @@ The meter is constructed by consuming streamed events from the piCorePlayer.  Se
 
 <img width="400" src="assets/vurgbclock.gif" align="center" />
 
+Analog VU meters, a work in progress, are also supported
+
+<img width="400" src="assets/rgbclock4vu.gif" align="center" />
+
 The news feed provides updates at configured intervals.  Multiple feeds may be specified but they should be fully RSS/Atom compliant or the results are unpredictable.
 
 Minimal performance metrics may also be displayed.  These have been paticularly useful during the development of the coverart cache.
