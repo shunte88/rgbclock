@@ -170,20 +170,30 @@ func Params(params ...interface{}) interface{} {
 }
 
 type (
+	// VUSetup - setup meter attributes
+	VUSetup struct {
+		color  string
+		width  float64
+		length float64 // percentile
+		well   bool
+	}
 	// VULayout - visualization setup
 	VULayout struct {
 		meter     string
 		mode      string
 		base      string
 		layout    string //  vertical/horizontal
-		xpos      [2]float64
+		setup     VUSetup
+		xpivot    [2]float64
 		w         int
 		h         int
 		w2m       int
 		h2m       int
+		ptWidth   float64
 		wMeter    float64
 		rMeter    float64
 		rWell     float64
+		vu        draw.Image // think! this doubles memory foot print
 		baseImage draw.Image
 	}
 	// LMSPlayer exposes several key attributes for the player and current track
@@ -245,7 +255,6 @@ type (
 		defaultart    draw.Image
 		volume        draw.Image
 		vulayout      VULayout
-		vu            draw.Image
 		volviz        bool
 		volinit       bool
 		voltrig       *time.Timer
@@ -363,6 +372,10 @@ type LMSConfig struct {
 	MeterMode    string
 	MeterLayout  string
 	MeterBase    string
+	NeedleColor  string
+	NeedleWidth  float64
+	NeedleLength float64 // percentile
+	NeedleWell   bool
 	SSESActive   bool
 	SSESHost     string
 	SSESPort     int
@@ -391,7 +404,6 @@ func NewLMSServer(lc LMSConfig) *LMSServer {
 	ls.web += `/`
 	ls.Player = NewLMSPlayer(lc.Player)
 	ls.volume = image.NewRGBA(image.Rect(0, 0, 24, 16))
-	ls.vu = image.NewRGBA(image.Rect(0, 0, 124, 54))
 	ls.playmodifiers = image.NewRGBA(image.Rect(0, 0, 28, 16))
 	ls.face = basicfont.Face7x13
 	ls.fontHeight = 13
@@ -412,11 +424,16 @@ func NewLMSServer(lc LMSConfig) *LMSServer {
 	ls.voltrig.Stop()
 	ls.volinit = false
 
+	ls.vulayout.vu = image.NewRGBA(image.Rect(0, 0, 1, 1)) // size as needed
 	if `` != lc.Meter {
 		ls.vulayout.meter = lc.Meter
 		ls.vulayout.layout = lc.MeterLayout
 		ls.vulayout.base = lc.MeterBase
 		ls.vulayout.mode = lc.MeterMode
+		ls.vulayout.setup.color = lc.NeedleColor
+		ls.vulayout.setup.width = lc.NeedleWidth
+		ls.vulayout.setup.length = lc.NeedleLength
+		ls.vulayout.setup.well = lc.NeedleWell
 		ls.initVUBase()
 	}
 
@@ -455,6 +472,13 @@ func (ls *LMSServer) consumeEvents() {
 		mindb := [2]int32{1000, 1000}
 		maxdb := [2]int32{-1000, -1000}
 		for event := range ls.sses.events {
+
+			if !event.Active {
+				ls.sses.active = false
+				close(ls.sses.events)
+				return // and stop consuming...
+			}
+
 			var m Meter
 			b, err := ioutil.ReadAll(event.Data)
 			if err != nil {
@@ -464,6 +488,10 @@ func (ls *LMSServer) consumeEvents() {
 				panic(err)
 			}
 			dirty := false
+
+			/////fmt.Printf("%#v\n\n", m)
+
+			// much WIP experimental below
 			for _, c := range m.Channels {
 				i := 0
 				if `R` == c.Name {
@@ -471,32 +499,36 @@ func (ls *LMSServer) consumeEvents() {
 				}
 				if c.DB < mindb[i] {
 					mindb[i] = c.DB
-					fmt.Println(c.Name, `min`, mindb[i], `max`, maxdb[i])
+					//fmt.Println(c.Name, `min`, mindb[i], `max`, maxdb[i])
 				}
 				if c.DB > maxdb[i] {
 					maxdb[i] = c.DB
-					fmt.Println(c.Name, `min`, mindb[i], `max`, maxdb[i])
+					//fmt.Println(c.Name, `min`, mindb[i], `max`, maxdb[i])
 				}
-				if accum[i] != c.Accumulated {
+				/*
+					if accum[i] != c.Accumulated {
+						dirty = true
+						accum[i] = c.Accumulated
+					}
+
+					if linear[i] != c.Linear {
+						dirty = true
+						linear[i] = c.Linear
+					}
+				*/
+				if dB[i] != c.DB {
 					dirty = true
-					accum[i] = c.Accumulated
-				}
-				if linear[i] != c.Linear {
-					dirty = true
-					linear[i] = c.Linear
+					dB[i] = c.DB
 				}
 				if dBfs[i] != c.DBfs {
 					dirty = true
 					dBfs[i] = c.DBfs
 				}
-				if dB[i] != c.DB {
-					dirty = true
-					dB[i] = c.DB
-				}
 				if scaled[i] != c.Scaled {
 					dirty = true
 					scaled[i] = c.Scaled
 				}
+
 			}
 			if dirty {
 
@@ -510,10 +542,15 @@ func (ls *LMSServer) consumeEvents() {
 					cll = color.RGBA{255 - cl, 128, cl, 128}
 					draw.Draw(ssecanvas, image.Rect(14, dy, 24, dy-scaled[`R`]), &image.Uniform{cll}, image.ZP, draw.Src)
 					ls.mux.Lock()
-					draw.Draw(ls.vu, ls.vu.Bounds(), ssecanvas, image.ZP, draw.Src)
+					draw.Draw(ls.vulayout.vu, ls.vulayout.vu.Bounds(), ssecanvas, image.ZP, draw.Src)
 					ls.mux.Unlock()
 				*/
-				ls.vuAnalog(accum, scaled, dB, dBfs, linear)
+				if `vuPeak` != ls.vulayout.mode {
+					ls.vuAnalog(accum, scaled, dB, dBfs, linear)
+				} else {
+					ls.vuPeak(dBfs)
+					//ls.vuPeak(dB)
+				}
 			}
 		}
 	}
@@ -764,12 +801,12 @@ func (ls *LMSServer) Coverart() draw.Image {
 
 // VUActive meter is active
 func (ls *LMSServer) VUActive() bool {
-	return (`` != ls.vulayout.meter)
+	return (ls.sses.active && `` != ls.vulayout.meter)
 }
 
 // VU returns the vu meter
 func (ls *LMSServer) VU() draw.Image {
-	return ls.vu
+	return ls.vulayout.vu
 }
 
 // Volume returns the volume glyph

@@ -11,10 +11,40 @@ LMS:
     endpoint: "/visionon"
   remaining: true
   visualize:
+    #meter: spectrum
     meter: vuAnalog
-    metermode: peak
+    #metermode: VU
+    metermode: vuPeak
     layout: horizontal
-    baseimage: "/home/pi/rgbclock/svg/vuscale.png"
+    basefolder: "/home/pi/rgbclock/svg/"
+    #baseimage: "vumcintosh2.png"
+    #baseimage: "vuscale.png"
+    baseimage: "vupeak.svg"
+    #baseimage: "vuminimal.png"
+    vupeak:
+      needle:
+        color: "#0000ff"
+        width: 0.0
+        length: 0.0
+        well: false
+    vumcintosh2:
+      needle: 
+        color: "#000000"
+        width: 1.2
+        length: 1.05
+        well: false
+    vuminimal:
+      needle: 
+        color: "#ffffff"
+        length: 0.85
+        width: 0.8
+        well: true
+    vuscale:
+      needle: 
+        color: "#FF4500"
+        length: 0.9
+        width: 1.0
+        well: true
 RGB:
   scroll_limit: 28
   mapper: "U-maper;Rotate:180"

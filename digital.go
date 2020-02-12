@@ -94,9 +94,9 @@ func imageTime(t time.Time, scaleh float64, txtColor string) (img [2]draw.Image,
 			canvas0.Gend()
 		} else {
 			canvas1.Circle(int(segPos[i]), 40, 10, seg7style[1])
-			canvas1.Circle(int(segPos[i])-6, 80, 10, seg7style[1])
+			canvas1.Circle(int(segPos[i])-8, 84, 10, seg7style[1])
 			canvas0.Circle(int(segPos[i]), 40, 10, seg7style[0])
-			canvas0.Circle(int(segPos[i])-6, 80, 10, seg7style[0])
+			canvas0.Circle(int(segPos[i])-8, 84, 10, seg7style[0])
 		}
 	}
 	canvas1.Gend()
@@ -329,9 +329,9 @@ func imageTimeThick(t time.Time, scaleh float64, txtColor string) (img [2]draw.I
 			canvas0.Gend()
 		} else {
 			canvas1.Circle(int(segPos[i]), 40, 10, seg7style[1])
-			canvas1.Circle(int(segPos[i]), 80, 10, seg7style[1])
+			canvas1.Circle(int(segPos[i]), 84, 10, seg7style[1])
 			canvas0.Circle(int(segPos[i]), 40, 10, seg7style[0])
-			canvas0.Circle(int(segPos[i]), 80, 10, seg7style[0])
+			canvas0.Circle(int(segPos[i]), 84, 10, seg7style[0])
 		}
 	}
 	canvas1.Gend()

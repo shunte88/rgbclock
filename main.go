@@ -8,10 +8,13 @@ import (
 	"io/ioutil"
 	"math"
 	"os"
+	"os/signal"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/disintegration/imaging"
@@ -123,16 +126,24 @@ func init() {
 	mapInit()
 
 	remaining = viper.GetBool("LMS.remaining")
+	baseimage := viper.GetString("LMS.visualize.baseimage")
+	meterbase := path.Join(viper.GetString("LMS.visualize.basefolder"), baseimage)
+	baseimage = `LMS.visualize.` +
+		strings.Replace(strings.Replace(baseimage, `.svg`, `.needle`, -1), `.png`, `.needle`, -1)
 
 	lms = NewLMSServer(LMSConfig{
 		Host:         viper.GetString("LMS.IP"),
 		Port:         viper.GetInt("LMS.port"),
 		Player:       viper.GetString("LMS.player"),
-		BaseFolder:   base + `/cache/`,
+		BaseFolder:   path.Join(base, `/cache/`),
 		Meter:        viper.GetString("LMS.visualize.meter"),
 		MeterMode:    viper.GetString("LMS.visualize.metermode"),
 		MeterLayout:  viper.GetString("LMS.visualize.layout"),
-		MeterBase:    viper.GetString("LMS.visualize.baseimage"),
+		MeterBase:    meterbase,
+		NeedleColor:  viper.GetString(baseimage + `.color`),
+		NeedleWidth:  viper.GetFloat64(baseimage + `.width`),
+		NeedleLength: viper.GetFloat64(baseimage + `.length`),
+		NeedleWell:   viper.GetBool(baseimage + `.well`),
 		SSESActive:   viper.GetBool("LMS.sses.active"),
 		SSESHost:     viper.GetString("LMS.sses.IP"),
 		SSESPort:     viper.GetInt("LMS.sses.port"),
@@ -221,6 +232,9 @@ func main() {
 	// fixed assets
 	imPrecip, _ = cacheImage(`brolly`, imPrecip, 0.00, ``)
 	imHumid, _ = cacheImage(`humidity`, imHumid, 0.00, ``)
+
+	channelIdent(`R`, 20, 20)
+	channelIdent(`L`, 20, 20)
 
 	togweather := false
 
@@ -326,6 +340,15 @@ func main() {
 	angle := 0.20
 	inca := angle
 	dump := 0
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGHUP, syscall.SIGTERM)
+
+	go func() {
+		sig := <-sigs
+		fmt.Printf("shutdown inc. GC (%v)\n", sig)
+		os.Exit(0)
+	}()
 
 	for {
 
@@ -443,7 +466,7 @@ func main() {
 				}
 			} else {
 				togweather = !togweather
-				temps = strings.Split(w.Current.Wind, " ")
+				temps = strings.Split(w.Current.Wind+" 0 mph", " ")
 				// place wind icon
 				if imWindDir.image != nil {
 					dc.DrawImageAnchored(imWindDir.image, int(wdx), int(wdy), 0.5, 0.5)

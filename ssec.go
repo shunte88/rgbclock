@@ -19,21 +19,24 @@ type (
 
 	// SSEvent represents a Server-Sent Event
 	SSEvent struct {
-		URI  string
-		Type string
-		Name string
-		ID   string
-		Data io.Reader
+		Active bool
+		URI    string
+		Type   string
+		Name   string
+		ID     string
+		Data   io.Reader
 	}
 
 	// Channel data - visualization
 	Channel struct {
-		Name        string `json:"name"`
-		Accumulated int32  `json:"accumulated,omitempty"`
-		DBfs        int32  `json:"dBfs,omitempty"`
-		DB          int32  `json:"dB,omitempty"`
-		Linear      int32  `json:"linear,omitempty"`
-		Scaled      int32  `json:"scaled,omitempty"`
+		Name        string  `json:"name"`
+		Accumulated int32   `json:"accumulated,omitempty"`
+		DBfs        int32   `json:"dBfs,omitempty"`
+		DB          int32   `json:"dB,omitempty"`
+		Linear      int32   `json:"linear,omitempty"`
+		Scaled      int32   `json:"scaled,omitempty"`
+		NumFFT      int32   `json:"numFFT,omitempty"`
+		FFT         []int32 `json:"FFT,omitempty"`
 	}
 	// Meter implementation, VU, Spectrum, RMS etc ...
 	Meter struct {
@@ -76,17 +79,24 @@ func ssenotify(uri string, evCh chan<- *SSEvent) error {
 		return ErrNilChan
 	}
 
+	var thisEvent *SSEvent
+
+	// prime for exception status
+	thisEvent = &SSEvent{URI: uri, Active: false}
+
 	req, err := liveReq("GET", uri, nil)
 	if err != nil {
 		ef := fmt.Errorf("error getting sse request: %v", err)
-		fmt.Printf("%v", ef)
+		fmt.Printf("%v\n", ef)
+		evCh <- thisEvent // deactivate consumer and channel
 		return ef
 	}
 
 	res, err := sseClient.Do(req)
 	if err != nil {
 		ef := fmt.Errorf("error performing request for %s: %v", uri, err)
-		fmt.Printf("%v", ef)
+		fmt.Printf("%v\n", ef)
+		evCh <- thisEvent // deactivate consumer and channel
 		return ef
 	}
 
@@ -94,8 +104,6 @@ func ssenotify(uri string, evCh chan<- *SSEvent) error {
 	defer res.Body.Close()
 
 	delim := []byte{':', ' '}
-
-	var thisEvent *SSEvent
 
 	for {
 		bs, err := br.ReadBytes('\n')
@@ -114,7 +122,7 @@ func ssenotify(uri string, evCh chan<- *SSEvent) error {
 			continue
 		}
 
-		thisEvent = &SSEvent{URI: uri}
+		thisEvent = &SSEvent{URI: uri, Active: true}
 		switch string(spl[0]) {
 		case eventTag:
 			thisEvent.Type = string(bytes.TrimSpace(spl[1]))

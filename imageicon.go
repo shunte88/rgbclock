@@ -94,6 +94,7 @@ func getImageIconWIP(i icon) (img draw.Image, err error) {
 			if err != nil {
 				return img, err
 			}
+			// does not address wind-Calm
 			bs := strings.Replace(string(body), `rotate(0`, fmt.Sprintf("rotate(%f", i.rotate), -1)
 			iconMem.WriteString(bs)
 		} else {

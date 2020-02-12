@@ -26,34 +26,86 @@ func (ls *LMSServer) initVUBase() {
 	}
 	defer vuf.Close()
 
-	vu, err := png.Decode(vuf)
-	if err != nil {
-		fmt.Println(`Decode PNG exception`, ls.vulayout.base, `:`, err)
-		panic(err)
+	if `vuPeak` != ls.vulayout.mode {
+
+		dc := gg.NewContext(0, 0)
+
+		vu, err := png.Decode(vuf)
+		if err != nil {
+			fmt.Println(`Decode PNG exception`, ls.vulayout.base, `:`, err)
+			panic(err)
+		}
+
+		z := vu.Bounds().Max.X
+		// horizontal/vertical layout
+		if `horizontal` == ls.vulayout.layout {
+			vu = imaging.Resize(vu, int(122/2), 40, imaging.Lanczos)
+			b := vu.Bounds()
+			ls.vulayout.w = b.Max.X
+			ls.vulayout.h = b.Max.Y
+			ls.vulayout.w2m = 2*(ls.vulayout.w) + 4
+			ls.vulayout.h2m = ls.vulayout.h + 2
+			// magic numbers are original scaling factors!!!
+			// but mainly addressed via config
+			if 0.00 == ls.vulayout.setup.width {
+				ls.vulayout.ptWidth = 0.015 * float64(ls.vulayout.w)
+			} else {
+				ls.vulayout.ptWidth = ls.vulayout.setup.width
+			}
+			ls.vulayout.wMeter = float64(ls.vulayout.h) + (float64(b.Max.X) * (41.00 / float64(z)))
+			if 0.00 == ls.vulayout.setup.length {
+				ls.vulayout.rMeter = float64(ls.vulayout.h) * (235.00 / float64(z))
+			} else {
+				ls.vulayout.rMeter = float64(ls.vulayout.h) * ls.vulayout.setup.length
+			}
+			ls.vulayout.rWell = float64(ls.vulayout.h) / 5.5
+		}
+
+		// create new image and place the meters and idents
+		chanident := [2]string{`L`, `R`}
+		dc = gg.NewContext(ls.vulayout.w2m, ls.vulayout.h2m)
+		for channel := 0; channel < 2; channel++ {
+			gutter := 1 + channel + (channel * (ls.vulayout.w + 1))
+			ls.vulayout.xpivot[channel] = float64(gutter) + (float64(ls.vulayout.w) / 2.00)
+			dc.DrawImage(vu, gutter, 1)
+			ident, _ := channelIdentScript(chanident[channel], 10, .1, `aqua`)
+			if nil != ident {
+				dc.DrawImageAnchored(ident,
+					1+int(ls.vulayout.xpivot[channel]),
+					int(ls.vulayout.h-int(float64(ls.vulayout.h)/4.8)),
+					0.5, 0.5)
+			}
+		}
+
+		// "cache"
+		ls.vulayout.baseImage = image.NewRGBA(image.Rect(0, 0, ls.vulayout.w2m, ls.vulayout.h2m))
+		draw.Draw(ls.vulayout.baseImage, ls.vulayout.baseImage.Bounds(), dc.Image(), image.ZP, draw.Src)
+
+	} else {
+
+		ls.vulayout.w2m = 122
+		ls.vulayout.h2m = 40
+
+		w, h := 162, 40
+		var iconMem = new(bytes.Buffer)
+		iconMem.ReadFrom(vuf)
+		vuf.Close() // done
+
+		iconI, err := oksvg.ReadIconStream(iconMem)
+		if err != nil {
+			fmt.Println(iconMem.String())
+			panic(err)
+		}
+
+		ls.vulayout.baseImage = image.NewRGBA(image.Rect(0, 0, ls.vulayout.w2m, ls.vulayout.h2m))
+		gv := rasterx.NewScannerGV(w, h, ls.vulayout.baseImage, ls.vulayout.baseImage.Bounds())
+		r := rasterx.NewDasher(w, h, gv)
+		iconI.SetTarget(0, 0, float64(ls.vulayout.w2m), float64(ls.vulayout.h2m))
+		iconI.Draw(r, 1.0)
+
 	}
 
-	z := vu.Bounds().Max.X
-	// horizontal/vertical layout
-	if `horizontal` == ls.vulayout.layout {
-		vu = imaging.Resize(vu, int(122/2), 40, imaging.Lanczos)
-		b := vu.Bounds()
-		ls.vulayout.w = b.Max.X
-		ls.vulayout.h = b.Max.Y
-		ls.vulayout.w2m = 2*(ls.vulayout.w) + 4
-		ls.vulayout.h2m = ls.vulayout.h + 2
-		ls.vulayout.wMeter = float64(ls.vulayout.h) + (float64(b.Max.X) * (41.00 / float64(z)))
-		ls.vulayout.rMeter = float64(b.Max.X) * (235.00 / float64(z))
-		ls.vulayout.rWell = float64(ls.vulayout.h) / 5.5
-	}
-	// create new image an place the meters
-	ls.vulayout.baseImage = image.NewRGBA(image.Rect(0, 0, ls.vulayout.w2m, ls.vulayout.h2m))
-	for i := 0; i < 2; i++ {
-		pt := image.Point{1 + i + (i * (ls.vulayout.w + 1)), 1}
-		ls.vulayout.xpos[i] = float64(pt.X) + (float64(ls.vulayout.w) / 2.00)
-		r := image.Rectangle{pt, pt.Add(image.Point{ls.vulayout.w, ls.vulayout.h})}
-		draw.Draw(ls.vulayout.baseImage, r, vu, image.ZP, draw.Src)
-	}
-	ls.vu = image.NewRGBA(image.Rect(0, 0, ls.vulayout.baseImage.Bounds().Max.X, ls.vulayout.baseImage.Bounds().Max.Y))
+	ls.vulayout.vu = image.NewRGBA(image.Rect(0, 0, ls.vulayout.w2m, ls.vulayout.h2m))
 
 }
 
@@ -71,36 +123,116 @@ func (ls *LMSServer) vuAnalog(accum [2]int32, scaled [2]int32, dB [2]int32, dBfs
 		mv := 0.00
 		// depending on the mode - calculate value
 
-		// simple pre-scaled
+		// -90dB is lower limit (equates to RMS of 1)
+
+		// simple pre-scaled - magic numbers are specific!
 		mv = float64(scaled[channel]) * (2 * 36.00) / 48.00
-		mv -= 36.000 // zero adjust
+		mv -= 36.000 // zero adjust [-3dB->-20dB]
 		/*
 			fmt.Printf("mv %f, scaled %.2d, dB %.3d, dBfs %.3d, Lin %.3d\n",
 				mv, scaled[channel], dB[channel], dBfs[channel], linear[channel])
 		*/
-		ax := (ls.vulayout.xpos[channel] + (math.Sin(mv/rad) * ls.vulayout.rMeter))
+		ax := (ls.vulayout.xpivot[channel] + (math.Sin(mv/rad) * ls.vulayout.rMeter))
 		ay := (ls.vulayout.wMeter - (math.Cos(mv/rad) * ls.vulayout.rMeter))
 
 		// draw the needle
-		dc.SetLineWidth(0.8)
-		dc.SetHexColor("#FF4500")
-		dc.DrawLine(ls.vulayout.xpos[channel], ls.vulayout.wMeter, ax, ay)
-		dc.Stroke()
-
-		// draw the well
-		dc.SetLineWidth(1)
-		dc.SetHexColor("#00ff00")
+		dc.SetLineCapButt()
+		dc.SetLineWidth(ls.vulayout.ptWidth) //0.8)
+		dc.SetHexColor(ls.vulayout.setup.color)
 		dc.StrokePreserve()
-		dc.SetHexColor("#000000")
-
-		dc.DrawEllipse(ls.vulayout.xpos[channel],
-			ls.vulayout.wMeter, ls.vulayout.rWell*1.2, ls.vulayout.rWell)
-		dc.Fill()
+		dc.DrawLine(ls.vulayout.xpivot[channel], ls.vulayout.wMeter, ax, ay)
 		dc.Stroke()
+
+		if ls.vulayout.setup.well {
+			// draw the well
+			dc.SetLineWidth(1)
+			dc.SetHexColor("#d3d3d3")
+			dc.StrokePreserve()
+			dc.SetHexColor("#000000")
+			dc.DrawEllipse(ls.vulayout.xpivot[channel],
+				ls.vulayout.wMeter, ls.vulayout.rWell*1.2, ls.vulayout.rWell)
+			dc.Fill()
+			dc.Stroke()
+		}
 
 	}
 
-	draw.Draw(ls.vu, ls.vu.Bounds(), dc.Image(), image.ZP, draw.Src)
+	draw.Draw(ls.vulayout.vu, ls.vulayout.vu.Bounds(), dc.Image(), image.ZP, draw.Over)
+
+}
+
+func channelIdentScript(channel string, shx, alpha float64, color string) (img draw.Image, err error) {
+
+	w, h := 70, 28
+	shx = shx / float64(h)
+	sw, sh := int(float64(w)*shx), int(float64(h)*shx)
+
+	img = image.NewRGBA(image.Rect(0, 0, sw, sh))
+
+	var iconMem = new(bytes.Buffer)
+	var canvas = svg.New(iconMem)
+
+	canvas.Start(w, h)
+
+	canvas.Group(`style="fill:` + color + `;"`)
+	if `R` == channel {
+		canvas.Path(`m2.39,4.88l0,-0.7l8.06,-0.25c1.887,0 3.307,0.307 4.26,0.92c0.953,0.613 1.43,1.743 1.43,3.39c0,2.273 -1.167,3.86 -3.5,4.76l3.92,8.29c0.953,0.127 1.85,0.32 2.69,0.58l-0.12,0.7c-1.1,-0.147 -2.29,-0.22 -3.57,-0.22c-1.273,0 -2.2,0.037 -2.78,0.11l-0.11,-0.39c0.313,-0.32 0.47,-0.853 0.47,-1.6c0,-1.493 -0.877,-3.873 -2.63,-7.14c-0.467,-0.093 -1.007,-0.14 -1.62,-0.14l0.08,-0.61l0.34,0c1.34,0 2.373,-0.333 3.1,-1c0.733,-0.66 1.1,-1.623 1.1,-2.89c0,-1.273 -0.287,-2.213 -0.86,-2.82c-0.567,-0.607 -1.457,-0.91 -2.67,-0.91c-0.747,0 -1.457,0.123 -2.13,0.37c-0.167,1.753 -0.25,4.5 -0.25,8.24c0,3.747 0.103,6.32 0.31,7.72c0.947,0.127 1.84,0.32 2.68,0.58l-0.11,0.7c-0.987,-0.147 -2.287,-0.22 -3.9,-0.22c-1.62,0 -3.12,0.073 -4.5,0.22l-0.08,-0.67c1.06,-0.26 2.087,-0.437 3.08,-0.53c0.24,-1.793 0.36,-4.477 0.36,-8.05c0,-3.573 -0.103,-6.237 -0.31,-7.99c-0.893,-0.3 -1.807,-0.45 -2.74,-0.45zm21.67,9.8l0,2.35c0,2.013 0.067,3.507 0.2,4.48c0.52,0.113 1.107,0.29 1.76,0.53l-0.06,0.53c-1.04,-0.147 -2.026,-0.22 -2.96,-0.22c-0.933,0 -1.876,0.057 -2.83,0.17l-0.09,-0.53c0.56,-0.247 1.114,-0.433 1.66,-0.56c0.167,-1.273 0.25,-2.74 0.25,-4.4l0,-2.35c0,-1.513 -0.076,-3.027 -0.23,-4.54c-0.48,-0.147 -0.983,-0.22 -1.51,-0.22l0,-0.59c1.44,-0.093 2.767,-0.28 3.98,-0.56l0.19,0.11c-0.24,1.44 -0.36,3.373 -0.36,5.8zm0.5,-9.69c-0.126,0.24 -0.353,0.547 -0.68,0.92c-0.326,0.373 -0.603,0.637 -0.83,0.79c-0.22,-0.153 -0.493,-0.417 -0.82,-0.79c-0.326,-0.373 -0.556,-0.68 -0.69,-0.92c0.114,-0.227 0.327,-0.483 0.64,-0.77c0.32,-0.287 0.61,-0.497 0.87,-0.63c0.247,0.147 0.527,0.367 0.84,0.66c0.32,0.287 0.544,0.533 0.67,0.74zm3.696,12.18c0,-1.907 0.506,-3.637 1.52,-5.19c1.006,-1.56 2.376,-2.63 4.11,-3.21c1.253,0 2.56,0.197 3.92,0.59c0.82,-0.167 1.54,-0.343 2.16,-0.53l0.14,0.5c-0.354,0.28 -0.794,0.55 -1.32,0.81c-0.24,2.26 -0.36,4.663 -0.36,7.21c0,2.547 0.063,4.53 0.19,5.95c-0.407,1.027 -1.18,2.04 -2.32,3.04c-1.14,1 -2.27,1.677 -3.39,2.03c-1.734,0 -3.394,-0.29 -4.98,-0.87l0,-0.53c0.353,-1.253 1.396,-2.813 3.13,-4.68l0,-0.11c-0.854,-0.24 -1.534,-0.87 -2.04,-1.89c-0.507,-1.013 -0.76,-2.053 -0.76,-3.12zm2.24,-1.23c0,0.873 0.163,1.777 0.49,2.71c0.326,0.933 0.793,1.4 1.4,1.4c0.606,0 1.363,-0.49 2.27,-1.47c0.906,-0.98 1.51,-1.833 1.81,-2.56c0,-2.447 -0.067,-4.06 -0.2,-4.84c-0.987,-0.447 -1.93,-0.67 -2.83,-0.67c-0.894,0 -1.594,0.223 -2.1,0.67c-0.56,1.36 -0.84,2.947 -0.84,4.76zm3.08,10.69c0.826,0 1.473,-0.223 1.94,-0.67c0.426,-1.12 0.69,-2.203 0.79,-3.25c0.106,-1.04 0.16,-2.747 0.16,-5.12l-0.11,-0.03c-0.507,1.067 -1.424,2.177 -2.75,3.33c-0.52,0.453 -1.024,0.92 -1.51,1.4c-1.174,1.18 -1.827,2.367 -1.96,3.56c1.026,0.52 2.173,0.78 3.44,0.78zm18.063,-12.43c0,-2.087 -0.43,-3.13 -1.29,-3.13c-0.727,0 -1.584,0.457 -2.57,1.37c-0.994,0.913 -1.657,1.763 -1.99,2.55c0,2.707 0.103,4.88 0.31,6.52c0.5,0.113 1.086,0.29 1.76,0.53l-0.06,0.53c-1.04,-0.147 -2.027,-0.22 -2.96,-0.22c-0.934,0 -1.877,0.057 -2.83,0.17l-0.09,-0.53c0.56,-0.247 1.113,-0.433 1.66,-0.56c0.166,-1.273 0.25,-2.74 0.25,-4.4l0,-5.21c0,-4.907 -0.224,-8.247 -0.67,-10.02l0.58,-0.17c0.173,0.6 0.39,1.093 0.65,1.48c1.026,-0.167 2.023,-0.39 2.99,-0.67l0.14,0.51c-0.354,0.28 -0.79,0.55 -1.31,0.81c-0.28,1.527 -0.42,4.69 -0.42,9.49l0.11,0.03c0.633,-0.88 1.46,-1.78 2.48,-2.7c1.013,-0.927 1.933,-1.53 2.76,-1.81c1.133,0 1.87,0.513 2.21,1.54c0.22,0.727 0.33,1.623 0.33,2.69c0,0.167 0,0.353 0,0.56l-0.14,7.87c0.453,0.147 0.96,0.22 1.52,0.22l0,0.59c-1.2,0.053 -2.46,0.23 -3.78,0.53l-0.2,-0.11c0.3,-1.813 0.476,-4.427 0.53,-7.84c0.02,-0.187 0.03,-0.393 0.03,-0.62zm9.154,2.69c0,2.573 0.28,3.86 0.84,3.86c1.027,0 2.09,-0.493 3.19,-1.48l0.28,0.28c-1.08,1.513 -2.396,2.587 -3.95,3.22c-1.06,0 -1.74,-0.487 -2.04,-1.46c-0.26,-0.82 -0.39,-2.237 -0.39,-4.25c0,-0.353 0,-0.737 0,-1.15l0.11,-5.57l-1.51,0l-0.06,-0.06c0,-0.3 0.03,-0.503 0.09,-0.61c1.567,-1.027 2.594,-2.093 3.08,-3.2c0.22,-0.053 0.48,-0.08 0.78,-0.08l0.11,0.06c-0.186,1.12 -0.296,2.023 -0.33,2.71l3.92,-0.14l0.11,0.11c-0.133,0.34 -0.256,0.78 -0.37,1.32c-0.946,-0.053 -2.196,-0.08 -3.75,-0.08l-0.11,5.54c0,0.333 0,0.66 0,0.98z`)
+	} else {
+		canvas.Path(`m25.269,21.905l-0.17,0.56c-1.867,-0.207 -4,-0.31 -6.4,-0.31c-2.4,0 -4.43,0.093 -6.09,0.28l-0.11,-0.7c0.727,-0.24 1.623,-0.453 2.69,-0.64c0.2,-1.533 0.3,-3.943 0.3,-7.23l0,-1.65c0,-3.267 -0.1,-5.673 -0.3,-7.22c-0.953,-0.133 -1.85,-0.33 -2.69,-0.59l0.11,-0.7c0.987,0.147 2.29,0.22 3.91,0.22c1.613,0 3.11,-0.073 4.49,-0.22l0.08,0.67c-1.12,0.26 -2.147,0.437 -3.08,0.53c-0.24,1.647 -0.36,4.39 -0.36,8.23c0,3.847 0.093,6.46 0.28,7.84c0.613,0.093 1.443,0.14 2.49,0.14c1.047,0 1.943,-0.167 2.69,-0.5c0.227,-0.693 0.403,-1.74 0.53,-3.14l0.7,0c0.073,1.98 0.383,3.457 0.93,4.43zm6.067,-1.35c1.18,0 2.33,-0.493 3.45,-1.48l0.31,0.28c-1.067,1.453 -2.43,2.527 -4.09,3.22c-1.647,0 -2.88,-0.513 -3.7,-1.54c-0.82,-1.027 -1.23,-2.453 -1.23,-4.28c0,-1.833 0.513,-3.537 1.54,-5.11c1.027,-1.58 2.4,-2.603 4.12,-3.07c1.247,0 2.123,0.247 2.63,0.74c0.5,0.493 0.75,1.367 0.75,2.62c0,0.707 -0.093,1.313 -0.28,1.82c0.393,0.147 0.853,0.22 1.38,0.22l-0.03,0.59c-0.113,0 -0.237,0 -0.37,0c-2.087,0 -4.587,0.31 -7.5,0.93c0,2.48 0.487,4.027 1.46,4.64c0.407,0.28 0.927,0.42 1.56,0.42zm1.54,-6.94c0,-1.233 -0.117,-2.093 -0.35,-2.58c-0.233,-0.48 -0.723,-0.72 -1.47,-0.72c-0.747,0 -1.39,0.223 -1.93,0.67c-0.5,1.047 -0.77,2.307 -0.81,3.78c1.533,-0.507 3.053,-0.89 4.56,-1.15zm8.687,-3.44l0,5.54c0,2.5 0.11,5.207 0.33,8.12c-0.26,-0.04 -0.47,-0.06 -0.63,-0.06c-0.16,0 -0.277,0 -0.35,0c-0.56,1.027 -0.98,2.353 -1.26,3.98l-0.5,-0.03c0.22,-4.033 0.33,-8.037 0.33,-12.01l0,-5.57l-1.51,0l-0.05,-0.06c0,-0.3 0.027,-0.503 0.08,-0.61c0.24,-0.093 0.733,-0.253 1.48,-0.48c0.187,-1.453 0.787,-2.807 1.8,-4.06c1.007,-1.253 2.2,-2.15 3.58,-2.69c0.82,0 1.66,0.15 2.52,0.45l0,0.39c-0.707,0.88 -1.107,1.953 -1.2,3.22l-0.62,0c0,-0.727 -0.02,-1.297 -0.06,-1.71c-0.353,-0.22 -0.88,-0.33 -1.58,-0.33c-0.7,0 -1.283,0.223 -1.75,0.67c-0.393,1.047 -0.59,2.39 -0.59,4.03l3.98,-0.14l0.11,0.11c-0.127,0.34 -0.247,0.78 -0.36,1.32c-0.953,-0.053 -2.203,-0.08 -3.75,-0.08zm8.731,6.52c0,2.573 0.28,3.86 0.84,3.86c1.027,0 2.09,-0.493 3.19,-1.48l0.28,0.28c-1.08,1.513 -2.397,2.587 -3.95,3.22c-1.06,0 -1.74,-0.487 -2.04,-1.46c-0.26,-0.82 -0.39,-2.237 -0.39,-4.25c0,-0.353 0,-0.737 0,-1.15l0.11,-5.57l-1.51,0l-0.06,-0.06c0,-0.3 0.03,-0.503 0.09,-0.61c1.567,-1.027 2.593,-2.093 3.08,-3.2c0.22,-0.053 0.48,-0.08 0.78,-0.08l0.11,0.06c-0.187,1.12 -0.297,2.023 -0.33,2.71l3.92,-0.14l0.11,0.11c-0.133,0.34 -0.257,0.78 -0.37,1.32c-0.947,-0.053 -2.197,-0.08 -3.75,-0.08l-0.11,5.54c0,0.333 0,0.66 0,0.98z`)
+	}
+
+	canvas.Gend()
+	canvas.End()
+
+	//fmt.Println(iconMem.String())
+
+	iconI, err := oksvg.ReadIconStream(iconMem)
+	if err != nil {
+		return img, err
+	}
+
+	gv := rasterx.NewScannerGV(w, h, img, img.Bounds())
+	r := rasterx.NewDasher(w, h, gv)
+	iconI.SetTarget(0, 0, float64(sw), float64(sh))
+	iconI.Draw(r, alpha)
+
+	return img, nil
+
+}
+func channelIdent(channel string, sw, sh int) (img draw.Image, err error) {
+
+	img = image.NewRGBA(image.Rect(0, 0, sw, sh))
+
+	var iconMem = new(bytes.Buffer)
+	var canvas = svg.New(iconMem)
+
+	w, h := 20, 20
+	canvas.Start(w, h)
+
+	canvas.Group(`style="fill:white;stroke-width:0.1;stroke:white;"`)
+	canvas.Circle(10, 10, 9, `style="fill:orangered;stroke:lime;stroke-alignment:inside;stroke-width:0.2;"`)
+	if `R` == channel {
+		canvas.Path(`m14.03195,14.51759l0,-0.3165c-0.48163,-0.33026 -0.59172,-0.68805 -0.60548,-2.02286c-0.02752,-1.65131 -0.27522,-2.1467 -1.36233,-2.61458c1.1284,-0.55044 1.58251,-1.25224 1.58251,-2.3944c0,-1.73388 -1.08711,-2.68338 -3.05493,-2.68338l-4.62367,0l0,10.03171l1.27977,0l0,-4.32093l3.30262,0c1.1284,0 1.66507,0.55044 1.65131,1.78892l-0.01376,0.89446c-0.01376,0.61924 0.11009,1.22472 0.28898,1.63755l1.55498,0zm-1.72012,-7.16944c0,1.18343 -0.60548,1.72011 -1.96781,1.72011l-3.09621,0l0,-3.45399l3.09621,0c1.43114,0 1.96781,0.60548 1.96781,1.73388z`)
+	} else {
+		canvas.Path(`m13.99,14.52771l0,-1.10818l-4.86517,0l0,-8.74379l-1.25683,0l0,9.85196l6.122,0z`)
+	}
+
+	canvas.Gend()
+	canvas.End()
+
+	//fmt.Println(iconMem.String())
+
+	iconI, err := oksvg.ReadIconStream(iconMem)
+	if err != nil {
+		return img, err
+	}
+
+	gv := rasterx.NewScannerGV(w, h, img, img.Bounds())
+	r := rasterx.NewDasher(w, h, gv)
+	iconI.SetTarget(0, 0, float64(sw), float64(sh))
+	iconI.Draw(r, .4)
+
+	return img, nil
 
 }
 

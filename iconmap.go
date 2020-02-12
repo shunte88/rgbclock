@@ -145,6 +145,7 @@ func mapInit() {
 		"wind-WNW":          icon{filename: windDegIcon, asis: windDegAsIs, color: wiColor, width: 60, height: 60, rotate: 112.5, scale: wiScale / 2, alpha: wiAlpha, shadow: true}, // WNW
 		"wind-NW":           icon{filename: windDegIcon, asis: windDegAsIs, color: wiColor, width: 60, height: 60, rotate: 135.0, scale: wiScale / 2, alpha: wiAlpha, shadow: true}, // NW
 		"wind-NNW":          icon{filename: windDegIcon, asis: windDegAsIs, color: wiColor, width: 60, height: 60, rotate: 157.5, scale: wiScale / 2, alpha: wiAlpha, shadow: true}, // NNW
+		"wind-Calm":         icon{filename: "wic-wind-calm", asis: true, color: wiColor, width: 60, height: 60, scale: wiScale / 2, alpha: wiAlpha, shadow: true},
 		"moon-0":            icon{filename: "wi-moon-alt-new", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
 		"moon-1":            icon{filename: "wi-moon-alt-waxing-crescent-5", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
 		"moon-2":            icon{filename: "wi-moon-alt-first-quarter", color: "bisque", width: 24, height: 24, scale: 0.60, alpha: 1, shadow: true},
