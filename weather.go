@@ -57,6 +57,8 @@ type (
 			Wind        string  `json:"wind"`
 			tempF       float64
 			tempC       float64
+			trend       string
+			trendColor  string
 		} `json:"current"`
 	}
 )
@@ -134,6 +136,7 @@ func cacheImageMethod(current string, ic iconCache, sw, sh int, f func(int, int)
 
 var lastHour int = -1
 var snap bool = true
+var lastPrice float64 = 0.00
 
 func weather() {
 
@@ -238,6 +241,22 @@ func weather() {
 
 	tx := int(float64(clockw) * 0.4)
 	imThermo, err = cacheThermo(temps[0], imThermo, tx, tx)
+
+	if lastPrice != w.Current.Price {
+		trend := ``
+		w.Current.trendColor = `#ffff00`
+		if w.Current.Price > lastPrice {
+			trend = `▲`
+			w.Current.trendColor = `#00ff00`
+		} else if w.Current.Price < lastPrice {
+			trend = `▼`
+			w.Current.trendColor = `#ff0000`
+
+		}
+		trend = ``
+		w.Current.trend = fmt.Sprintf("%s%.2f", trend, w.Current.Price)
+		lastPrice = w.Current.Price
+	}
 
 }
 

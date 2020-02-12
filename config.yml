@@ -19,8 +19,15 @@ LMS:
     basefolder: "/home/pi/rgbclock/svg/"
     #baseimage: "vumcintosh2.png"
     #baseimage: "vuscale.png"
-    baseimage: "vupeak.svg"
+    #baseimage: "vupeak.svg"
+    baseimage: "vupeak2.svg"
     #baseimage: "vuminimal.png"
+    vupeak2:
+      needle:
+        color: "#0000ff"
+        width: 0.0
+        length: 0.0
+        well: false
     vupeak:
       needle:
         color: "#0000ff"
