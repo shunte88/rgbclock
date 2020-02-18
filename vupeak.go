@@ -39,7 +39,7 @@ func (ls *LMSServer) vuPeak(dBfs [2]int32) {
 		for channel := 0; channel < 2; channel++ {
 			color := `green`
 			opacity := .9
-			testd := (30.00 + dBfs[channel])
+			testd := (20.00 + dBfs[channel])
 			if l >= testd {
 				color = `lightgrey`
 				opacity = .4

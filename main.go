@@ -466,7 +466,7 @@ func main() {
 				}
 			} else {
 				togweather = !togweather
-				temps = strings.Split(w.Current.Wind+" 0 mph", " ")
+				temps = strings.Split(w.Current.Wind+" -- mph", " ") // fix for "Calm"
 				// place wind icon
 				if imWindDir.image != nil {
 					dc.DrawImageAnchored(imWindDir.image, int(wdx), int(wdy), 0.5, 0.5)
@@ -526,8 +526,8 @@ func main() {
 				dc.DrawStringAnchored(evut, cx, hf-(length-2), 0.5, 0.5)
 				dc.DrawStringAnchored(imIcon.last, cx, (hf-(length-2))-8, 0.5, 0.5)
 			}
-			dc.SetHexColor(w.Current.trendColor)
-			dc.DrawStringAnchored(w.Current.trend, 32, 2+cy+(hf/4), 0.5, 0.5)
+			//dc.SetHexColor(w.Current.trendColor)
+			//dc.DrawStringAnchored(w.Current.trend, 32, 2+cy+(hf/4), 0.5, 0.5)
 
 		}
 

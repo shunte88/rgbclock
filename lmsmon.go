@@ -454,16 +454,12 @@ func (ls *LMSServer) sseclient() {
 func (ls *LMSServer) consumeEvents() {
 	if ls.sses.active {
 
-		/*
-			secanvas := image.NewRGBA(image.Rect(0, 0, 26, 50))
-			dy := (ssecanvas.Bounds().Max.Y) - 2
-			var scaled map[string]int
-			scaled = make(map[string]int)
-			scaled[`L`], scaled[`R`] = -1, -1
-			var accum map[string]float64
-			accum = make(map[string]float64)
-			accum[`L`], accum[`R`] = -1.000, -1.000
-		*/
+		wsa := lms.vulayout.baseImage.Bounds().Max.X
+		hsa := lms.vulayout.baseImage.Bounds().Max.Y
+		ssecanvas := image.NewRGBA(image.Rect(0, 0, wsa, hsa))
+
+		wbin := wsa / (3 + (13 * 2))
+
 		accum := [2]int32{-1, -1}
 		dBfs := [2]int32{1000, 1000}
 		dB := [2]int32{1000, 1000}
@@ -471,6 +467,10 @@ func (ls *LMSServer) consumeEvents() {
 		scaled := [2]int32{-1, -1}
 		mindb := [2]int32{1000, 1000}
 		maxdb := [2]int32{-1000, -1000}
+
+		// SA scaling
+		multiSA := float64(wsa) / 31.00
+
 		for event := range ls.sses.events {
 
 			if !event.Active {
@@ -484,72 +484,87 @@ func (ls *LMSServer) consumeEvents() {
 			if err != nil {
 				panic(err)
 			}
+			good := true
 			if err := json.Unmarshal(b, &m); err != nil {
-				panic(err)
+				fmt.Println(err) // observed incomplete JSON - timing thread safe pointers ???
+				good = false
 			}
 			dirty := false
+			dataset := m.Type
 
-			/////fmt.Printf("%#v\n\n", m)
+			if good {
 
-			// much WIP experimental below
-			for _, c := range m.Channels {
-				i := 0
-				if `R` == c.Name {
-					i = 1
-				}
-				if c.DB < mindb[i] {
-					mindb[i] = c.DB
-					//fmt.Println(c.Name, `min`, mindb[i], `max`, maxdb[i])
-				}
-				if c.DB > maxdb[i] {
-					maxdb[i] = c.DB
-					//fmt.Println(c.Name, `min`, mindb[i], `max`, maxdb[i])
-				}
-				/*
-					if accum[i] != c.Accumulated {
+				// much WIP experimental below
+				for _, c := range m.Channels {
+					i := 0
+					if `R` == c.Name {
+						i = 1
+					}
+					if c.DB < mindb[i] {
+						mindb[i] = c.DB
+						//fmt.Println(c.Name, `min`, mindb[i], `max`, maxdb[i])
+					}
+					if c.DB > maxdb[i] {
+						maxdb[i] = c.DB
+						//fmt.Println(c.Name, `min`, mindb[i], `max`, maxdb[i])
+					}
+					/*
+						if accum[i] != c.Accumulated {
+							dirty = true
+							accum[i] = c.Accumulated
+						}
+
+						if linear[i] != c.Linear {
+							dirty = true
+							linear[i] = c.Linear
+						}
+					*/
+					if dB[i] != c.DB {
 						dirty = true
-						accum[i] = c.Accumulated
+						dB[i] = c.DB
+					}
+					if dBfs[i] != c.DBfs {
+						dirty = true
+						dBfs[i] = c.DBfs
+					}
+					if scaled[i] != c.Scaled {
+						dirty = true
+						scaled[i] = c.Scaled
 					}
 
-					if linear[i] != c.Linear {
-						dirty = true
-						linear[i] = c.Linear
-					}
-				*/
-				if dB[i] != c.DB {
-					dirty = true
-					dB[i] = c.DB
 				}
-				if dBfs[i] != c.DBfs {
-					dirty = true
-					dBfs[i] = c.DBfs
-				}
-				if scaled[i] != c.Scaled {
-					dirty = true
-					scaled[i] = c.Scaled
-				}
-
 			}
 			if dirty {
 
-				// update rudi-VU
-				/*
-					draw.Draw(ssecanvas, ssecanvas.Bounds(), image.Transparent, image.ZP, draw.Src)
-					cl := 255 - uint8(float64(scaled[`L`])*5.3125)
-					cll := color.RGBA{cl, 255 - cl, 192, 128}
-					draw.Draw(ssecanvas, image.Rect(2, dy, 12, dy-scaled[`L`]), &image.Uniform{cll}, image.ZP, draw.Src)
-					cl = 255 - uint8(float64(scaled[`R`])*5.3125)
-					cll = color.RGBA{255 - cl, 128, cl, 128}
-					draw.Draw(ssecanvas, image.Rect(14, dy, 24, dy-scaled[`R`]), &image.Uniform{cll}, image.ZP, draw.Src)
+				if `VU` == dataset {
+					if `vuPeak` != ls.vulayout.mode {
+						ls.vuAnalog(accum, scaled, dB, dBfs, linear)
+					} else {
+						ls.vuPeak(dBfs)
+						//ls.vuPeak(dB)
+					}
+				} else {
+					//draw.Draw(ssecanvas, ssecanvas.Bounds(), image.Transparent, image.ZP, draw.Src)
+					draw.Draw(ssecanvas, ssecanvas.Bounds(), ls.vulayout.baseImage, image.ZP, draw.Src)
+
+					cll := color.RGBA{255, 64, 192, 128} // getRandomColor()
+					oot := 0
+					for o, c := range m.Channels {
+						ofs := wbin + (o * (wsa / 2))
+						for bin := 0; bin < 13; bin++ {
+							ofs += bin * wbin
+							if bin < int(c.NumFFT) {
+								oot = int(multiSA * float64(c.FFT[bin]))
+							} else {
+								oot = int(multiSA / 4)
+							}
+							draw.Draw(ssecanvas, image.Rect(ofs, hsa, ofs+wbin-1, hsa-oot), &image.Uniform{cll}, image.ZP, draw.Src)
+						}
+					}
 					ls.mux.Lock()
 					draw.Draw(ls.vulayout.vu, ls.vulayout.vu.Bounds(), ssecanvas, image.ZP, draw.Src)
 					ls.mux.Unlock()
-				*/
-				if `vuPeak` != ls.vulayout.mode {
-					ls.vuAnalog(accum, scaled, dB, dBfs, linear)
-				} else {
-					ls.vuPeak(dBfs)
-					//ls.vuPeak(dB)
+
 				}
 			}
 		}

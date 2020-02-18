@@ -63,9 +63,12 @@ func liveReq(verb, uri string, body io.Reader) (*http.Request, error) {
 		return nil, err
 	}
 
-	req.Header.Set("Accept", "text/event-stream")
+	req.Header.Set(`Accept`, `text/event-stream`)
+	req.Header.Set(`Cache-Control`, `no-cache`)
+	req.Header.Set(`Connection`, `keep-alive`)
 
 	return req, nil
+
 }
 
 var getReq = func(verb, uri string, body io.Reader) (*http.Request, error) {
@@ -84,6 +87,10 @@ func ssenotify(uri string, evCh chan<- *SSEvent) error {
 	// prime for exception status
 	thisEvent = &SSEvent{URI: uri, Active: false}
 
+	//req, err := liveReq("HEAD", uri, nil) // hasses quirks...
+	//if err == nil {
+	//	_, _ = sseClient.Do(req)
+	//}
 	req, err := liveReq("GET", uri, nil)
 	if err != nil {
 		ef := fmt.Errorf("error getting sse request: %v", err)
