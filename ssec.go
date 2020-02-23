@@ -75,11 +75,21 @@ var getReq = func(verb, uri string, body io.Reader) (*http.Request, error) {
 	return http.NewRequest(verb, uri, body)
 }
 
-func ssenotify(uri string, evCh chan<- *SSEvent) error {
+func ssenotifyacquire(uri string, evCh chan<- *SSEvent) error {
+	for {
+		foo, err := ssenotify(uri, evCh)
+		if foo < 0 {
+			return err
+		}
+	}
+	return nil
+}
+
+func ssenotify(uri string, evCh chan<- *SSEvent) (int, error) {
 
 	if evCh == nil {
 		fmt.Println(`ssenotify`, ErrNilChan)
-		return ErrNilChan
+		return 0, ErrNilChan
 	}
 
 	var thisEvent *SSEvent
@@ -87,16 +97,12 @@ func ssenotify(uri string, evCh chan<- *SSEvent) error {
 	// prime for exception status
 	thisEvent = &SSEvent{URI: uri, Active: false}
 
-	//req, err := liveReq("HEAD", uri, nil) // hasses quirks...
-	//if err == nil {
-	//	_, _ = sseClient.Do(req)
-	//}
 	req, err := liveReq("GET", uri, nil)
 	if err != nil {
 		ef := fmt.Errorf("error getting sse request: %v", err)
 		fmt.Printf("%v\n", ef)
 		evCh <- thisEvent // deactivate consumer and channel
-		return ef
+		return -1, ef
 	}
 
 	res, err := sseClient.Do(req)
@@ -104,19 +110,20 @@ func ssenotify(uri string, evCh chan<- *SSEvent) error {
 		ef := fmt.Errorf("error performing request for %s: %v", uri, err)
 		fmt.Printf("%v\n", ef)
 		evCh <- thisEvent // deactivate consumer and channel
-		return ef
+		return -1, ef
 	}
 
 	br := bufio.NewReader(res.Body)
 	defer res.Body.Close()
 
 	delim := []byte{':', ' '}
-
+	foo := 0
 	for {
+
 		bs, err := br.ReadBytes('\n')
 
 		if err != nil && err != io.EOF {
-			return err
+			return 0, err
 		}
 
 		if len(bs) < 2 {
@@ -142,5 +149,5 @@ func ssenotify(uri string, evCh chan<- *SSEvent) error {
 		}
 	}
 
-	return nil
+	return foo, nil
 }

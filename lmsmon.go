@@ -447,7 +447,7 @@ func NewLMSServer(lc LMSConfig) *LMSServer {
 
 func (ls *LMSServer) sseclient() {
 	ls.sses.events = make(chan *SSEvent)
-	go ssenotify(ls.sses.url, ls.sses.events)
+	go ssenotifyacquire(ls.sses.url, ls.sses.events)
 	go ls.consumeEvents()
 }
 
@@ -457,8 +457,9 @@ func (ls *LMSServer) consumeEvents() {
 		wsa := lms.vulayout.baseImage.Bounds().Max.X
 		hsa := lms.vulayout.baseImage.Bounds().Max.Y
 		ssecanvas := image.NewRGBA(image.Rect(0, 0, wsa, hsa))
+		govu := false
 
-		wbin := wsa / (3 + (13 * 2))
+		wbin := wsa / (6 + (9 * 2))
 
 		accum := [2]int32{-1, -1}
 		dBfs := [2]int32{1000, 1000}
@@ -467,15 +468,19 @@ func (ls *LMSServer) consumeEvents() {
 		scaled := [2]int32{-1, -1}
 		mindb := [2]int32{1000, 1000}
 		maxdb := [2]int32{-1000, -1000}
+		// fun with caps
+		caps := [2][9]float64{{0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
 
 		// SA scaling
-		multiSA := float64(wsa) / 31.00
+		multiSA := float64(hsa-1) / 31.00 // max input is 31 -2 to leave head-room
 
 		for event := range ls.sses.events {
 
+			// if we get an exception - review what happens here
 			if !event.Active {
 				ls.sses.active = false
 				close(ls.sses.events)
+				fmt.Println(`Inactive SSES, exit event stream`)
 				return // and stop consuming...
 			}
 
@@ -537,6 +542,7 @@ func (ls *LMSServer) consumeEvents() {
 			if dirty {
 
 				if `VU` == dataset {
+					govu = true
 					if `vuPeak` != ls.vulayout.mode {
 						ls.vuAnalog(accum, scaled, dB, dBfs, linear)
 					} else {
@@ -544,21 +550,42 @@ func (ls *LMSServer) consumeEvents() {
 						//ls.vuPeak(dB)
 					}
 				} else {
-					//draw.Draw(ssecanvas, ssecanvas.Bounds(), image.Transparent, image.ZP, draw.Src)
-					draw.Draw(ssecanvas, ssecanvas.Bounds(), ls.vulayout.baseImage, image.ZP, draw.Src)
 
-					cll := color.RGBA{255, 64, 192, 128} // getRandomColor()
+					if govu {
+						draw.Draw(ssecanvas, ssecanvas.Bounds(), ls.vulayout.vu, image.ZP, draw.Src)
+					} else {
+						draw.Draw(ssecanvas, ssecanvas.Bounds(), ls.vulayout.baseImage, image.ZP, draw.Src)
+					}
+
 					oot := 0
-					for o, c := range m.Channels {
-						ofs := wbin + (o * (wsa / 2))
-						for bin := 0; bin < 13; bin++ {
-							ofs += bin * wbin
+					capll := color.RGBA{255, 0, 0, 192}
+					for channel, c := range m.Channels {
+						cll := getRandomColor(128)
+						ofs := int(wbin/2) + 2 + (channel * (wsa / 2))
+						for bin := 0; bin < 9; bin++ {
+							test := 0.00
 							if bin < int(c.NumFFT) {
+								//cll = getRandomColor(64 + uint8((255-65)*(float64(c.FFT[bin])/31)))
+								cll.A = 64 + uint8((255-65)*(float64(c.FFT[bin])/31))
 								oot = int(multiSA * float64(c.FFT[bin]))
+								test = float64(c.FFT[bin])
 							} else {
-								oot = int(multiSA / 4)
+								oot = int(multiSA / 4.00)
 							}
 							draw.Draw(ssecanvas, image.Rect(ofs, hsa, ofs+wbin-1, hsa-oot), &image.Uniform{cll}, image.ZP, draw.Src)
+							if test >= caps[channel][bin] {
+								caps[channel][bin] = test
+							} else if caps[channel][bin] > 0 {
+								caps[channel][bin]--
+								if caps[channel][bin] < 0 {
+									caps[channel][bin] = 0
+								}
+							}
+							if caps[channel][bin] > 0 {
+								coot := int(multiSA * caps[channel][bin])
+								draw.Draw(ssecanvas, image.Rect(ofs, hsa-coot-1, ofs+wbin-1, hsa-coot), &image.Uniform{capll}, image.ZP, draw.Src)
+							}
+							ofs += (1 + wbin)
 						}
 					}
 					ls.mux.Lock()
@@ -571,12 +598,12 @@ func (ls *LMSServer) consumeEvents() {
 	}
 }
 
-func getRandomColor() color.RGBA {
+func getRandomColor(alpha uint8) color.RGBA {
 	rand.Seed(time.Now().UnixNano())
 	r := uint8(rand.Intn(255))
 	g := uint8(rand.Intn(255))
 	b := uint8(rand.Intn(255))
-	return color.RGBA{r, g, b, 128}
+	return color.RGBA{r, g, b, alpha}
 }
 
 // Close and clear the associated cache

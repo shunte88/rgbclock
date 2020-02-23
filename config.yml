@@ -8,12 +8,12 @@ LMS:
     active: true
     IP: "http://192.168.1.37"
     port: 8022
-    #endpoint: "/visionon?subscribe=VU-SA"
-    endpoint: "/visionon?subscribe=SA"
+    # recieve VU and Spectrum Analysis payloads
+    endpoint: "/visionon?subscribe=VU-SA"
   remaining: true
   visualize:
     #meter: spectrum
-    meter: vuAnalog
+    meter: vuPeak
     metermode: VU
     #metermode: vuPeak
     layout: horizontal
